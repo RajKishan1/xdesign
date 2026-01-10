@@ -1,0 +1,180 @@
+import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
+import { NextRequest, NextResponse } from "next/server";
+import prisma from "@/lib/prisma";
+import { inngest } from "@/inngest/client";
+
+export async function GET(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const session = await getKindeServerSession();
+    const user = await session.getUser();
+
+    if (!user) throw new Error("Unauthorized");
+
+    const project = await prisma.project.findFirst({
+      where: {
+        userId: user.id,
+        id: id,
+      },
+      include: {
+        frames: true,
+      },
+    });
+
+    if (!project) {
+      return NextResponse.json(
+        {
+          error: "Project not found",
+        },
+        { status: 404 }
+      );
+    }
+
+    return NextResponse.json(project);
+  } catch (error) {
+    console.log(error);
+    return NextResponse.json(
+      {
+        error: "Fail to fetch project",
+      },
+      { status: 500 }
+    );
+  }
+}
+
+export async function POST(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    
+    let prompt: string;
+    try {
+      const body = await request.json();
+      prompt = body.prompt;
+      if (!prompt || typeof prompt !== "string") {
+        return NextResponse.json(
+          { error: "Missing or invalid prompt" },
+          { status: 400 }
+        );
+      }
+    } catch (error) {
+      return NextResponse.json(
+        { error: "Invalid request body" },
+        { status: 400 }
+      );
+    }
+
+    const session = await getKindeServerSession();
+    const user = await session.getUser();
+
+    if (!user) {
+      return NextResponse.json(
+        { error: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+
+    const userId = user.id;
+    const project = await prisma.project.findFirst({
+      where: { id, userId: user.id },
+      include: { frames: true },
+    });
+
+    if (!project) {
+      return NextResponse.json(
+        { error: "Project not found" },
+        { status: 404 }
+      );
+    }
+
+    //Trigger the Inngest - don't fail the request if Inngest fails
+    // The function will be retried automatically by Inngest if it's configured
+    try {
+      await inngest.send({
+        name: "ui/generate.screens",
+        data: {
+          userId,
+          projectId: id,
+          prompt,
+          frames: project.frames,
+          theme: project.theme,
+        },
+      });
+      console.log("Inngest event sent successfully for project:", id);
+    } catch (inngestError) {
+      console.error("Failed to send Inngest event:", inngestError);
+      console.error("Inngest error details:", {
+        message: inngestError instanceof Error ? inngestError.message : String(inngestError),
+        stack: inngestError instanceof Error ? inngestError.stack : undefined,
+      });
+      // In development, check if Inngest dev server is running
+      if (process.env.NODE_ENV === "development") {
+        console.warn("⚠️  Inngest dev server may not be running. Start it with: npx inngest-cli dev");
+      }
+      // Continue anyway - don't fail the request
+      // In production, events will be queued and retried
+    }
+
+    return NextResponse.json({
+      success: true,
+    });
+  } catch (error) {
+    console.error("POST /project/[id] Error:", error);
+    console.error("Error details:", {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      name: error instanceof Error ? error.name : undefined,
+    });
+    return NextResponse.json(
+      {
+        error: "Failed to generate frame",
+        details: process.env.NODE_ENV === "development" 
+          ? (error instanceof Error ? error.message : String(error)) 
+          : undefined,
+      },
+      { status: 500 }
+    );
+  }
+}
+
+export async function PATCH(
+  request: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+    const { themeId } = await request.json();
+    const session = await getKindeServerSession();
+    const user = await session.getUser();
+
+    if (!user) throw new Error("Unauthorized");
+    if (!themeId) throw new Error("Missing Theme");
+
+    const userId = user.id;
+
+    const project = await prisma.project.update({
+      where: { id, userId },
+      data: {
+        theme: themeId,
+      },
+    });
+
+    return NextResponse.json({
+      success: true,
+      project,
+    });
+  } catch (error) {
+    console.log("Error occured ", error);
+    return NextResponse.json(
+      {
+        error: "Failed to update project",
+      },
+      { status: 500 }
+    );
+  }
+}
