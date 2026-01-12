@@ -15,6 +15,7 @@ import {
   Send,
   Wand2,
   Wand2Icon,
+  Layers,
 } from "lucide-react";
 import { useState } from "react";
 import { Separator } from "../ui/separator";
@@ -45,10 +46,12 @@ type PropsType = {
   scale?: number;
   isRegenerating?: boolean;
   isDeleting?: boolean;
+  isCopyingToFigma?: boolean;
   onOpenHtmlDialog: () => void;
   onDownloadPng?: () => void;
   onRegenerate?: (prompt: string) => void;
   onDeleteFrame?: () => void;
+  onCopyToFigma?: () => void;
 };
 const DeviceFrameToolbar = ({
   title,
@@ -58,10 +61,12 @@ const DeviceFrameToolbar = ({
   isDownloading,
   isRegenerating = false,
   isDeleting = false,
+  isCopyingToFigma = false,
   onOpenHtmlDialog,
   onDownloadPng,
   onRegenerate,
   onDeleteFrame,
+  onCopyToFigma,
 }: PropsType) => {
   const [promptValue, setPromptValue] = useState("");
   const [isPopoverOpen, setIsPopoverOpen] = useState(false);
@@ -149,6 +154,27 @@ const DeviceFrameToolbar = ({
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>Download PNG</TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    disabled={disabled || isCopyingToFigma}
+                    size="icon-xs"
+                    className="rounded-full!"
+                    variant="ghost"
+                    onClick={onCopyToFigma}
+                  >
+                    {isCopyingToFigma ? (
+                      <Spinner />
+                    ) : (
+                      <Layers className="size-3.5! stroke-1.5!" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>Copy to Figma</TooltipContent>
               </Tooltip>
             </TooltipProvider>
             <Popover open={isPopoverOpen} onOpenChange={setIsPopoverOpen}>

@@ -11,6 +11,7 @@ import DeviceFrameToolbar from "./device-frame-toolbar";
 import { toast } from "sonner";
 import DeviceFrameSkeleton from "./device-frame-skeleton";
 import { useRegenerateFrame, useDeleteFrame } from "@/features/use-frame";
+import { copyDesignToFigma } from "@/lib/figma-export";
 
 type PropsType = {
   html: string;
@@ -46,6 +47,7 @@ const DeviceFrame = ({
     height: minHeight,
   });
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isCopyingToFigma, setIsCopyingToFigma] = useState(false);
 
   const regenerateMutation = useRegenerateFrame(projectId);
   const deleteMutation = useDeleteFrame(projectId);
@@ -123,6 +125,28 @@ const DeviceFrame = ({
     deleteMutation.mutate(frameId);
   }, [frameId, deleteMutation]);
 
+  const handleCopyToFigma = useCallback(async () => {
+    if (isCopyingToFigma) return;
+    setIsCopyingToFigma(true);
+    try {
+      // Pass the iframe reference for better conversion
+      await copyDesignToFigma(
+        iframeRef.current,
+        html,
+        frameSize.width,
+        frameSize.height,
+        title
+      );
+
+      toast.success("Design copied! Paste in Figma (Ctrl+V or Cmd+V)");
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to copy design to Figma");
+    } finally {
+      setIsCopyingToFigma(false);
+    }
+  }, [html, frameSize.width, frameSize.height, title, isCopyingToFigma]);
+
   return (
     <Rnd
       default={{
@@ -182,14 +206,17 @@ const DeviceFrame = ({
             isDownloading ||
             isLoading ||
             regenerateMutation.isPending ||
-            deleteMutation.isPending
+            deleteMutation.isPending ||
+            isCopyingToFigma
           }
           isDownloading={isDownloading}
           isRegenerating={regenerateMutation.isPending}
           isDeleting={deleteMutation.isPending}
+          isCopyingToFigma={isCopyingToFigma}
           onDownloadPng={handleDownloadPng}
           onRegenerate={handleRegenerate}
           onDeleteFrame={handleDeleteFrame}
+          onCopyToFigma={handleCopyToFigma}
           onOpenHtmlDialog={onOpenHtmlDialog}
         />
 
