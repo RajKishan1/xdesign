@@ -15,6 +15,8 @@ export interface PrototypeLink {
   fromScreenId: string;
   fromElementId: string;
   toScreenId: string;
+  // Element position relative to the screen (for precise connector starting point)
+  fromElementPosition?: { x: number; y: number; width: number; height: number };
 }
 
 // Canvas modes
@@ -26,6 +28,7 @@ export interface LinkingState {
   fromScreenId: string | null;
   fromElementId: string | null;
   fromElementRect: DOMRect | null;
+  fromElementRectRelative: DOMRect | null; // Element position relative to screen content area
   clickPosition: { x: number; y: number } | null;
   mousePosition: { x: number; y: number } | null;
 }
@@ -46,7 +49,7 @@ interface PrototypeContextType {
 
   // Linking state (when creating new links)
   linkingState: LinkingState;
-  startLinking: (screenId: string, elementId: string, elementRect: DOMRect, clickPosition: { x: number; y: number }) => void;
+  startLinking: (screenId: string, elementId: string, elementRect: DOMRect, clickPosition: { x: number; y: number }, elementRectRelative?: DOMRect) => void;
   updateLinkingPosition: (x: number, y: number) => void;
   finishLinking: (toScreenId: string) => void;
   cancelLinking: () => void;
@@ -81,6 +84,7 @@ export const PrototypeProvider = ({
     fromScreenId: null,
     fromElementId: null,
     fromElementRect: null,
+    fromElementRectRelative: null,
     clickPosition: null,
     mousePosition: null,
   });
@@ -161,12 +165,13 @@ export const PrototypeProvider = ({
     [links]
   );
 
-  const startLinking = useCallback((screenId: string, elementId: string, elementRect: DOMRect, clickPosition: { x: number; y: number }) => {
+  const startLinking = useCallback((screenId: string, elementId: string, elementRect: DOMRect, clickPosition: { x: number; y: number }, elementRectRelative?: DOMRect) => {
     setLinkingState({
       isLinking: true,
       fromScreenId: screenId,
       fromElementId: elementId,
       fromElementRect: elementRect,
+      fromElementRectRelative: elementRectRelative || null,
       clickPosition: clickPosition,
       mousePosition: null,
     });
@@ -181,10 +186,23 @@ export const PrototypeProvider = ({
 
   const finishLinking = useCallback((toScreenId: string) => {
     if (linkingState.fromScreenId && linkingState.fromElementId && toScreenId !== linkingState.fromScreenId) {
+      // Use the element position relative to screen content area
+      let elementPosition: { x: number; y: number; width: number; height: number } | undefined;
+      if (linkingState.fromElementRectRelative) {
+        // Element position is already relative to screen content area (overlay/iframe)
+        elementPosition = {
+          x: linkingState.fromElementRectRelative.left,
+          y: linkingState.fromElementRectRelative.top,
+          width: linkingState.fromElementRectRelative.width,
+          height: linkingState.fromElementRectRelative.height,
+        };
+      }
+      
       addLink({
         fromScreenId: linkingState.fromScreenId,
         fromElementId: linkingState.fromElementId,
         toScreenId,
+        fromElementPosition: elementPosition,
       });
     }
     setLinkingState({
@@ -192,10 +210,11 @@ export const PrototypeProvider = ({
       fromScreenId: null,
       fromElementId: null,
       fromElementRect: null,
+      fromElementRectRelative: null,
       clickPosition: null,
       mousePosition: null,
     });
-  }, [linkingState.fromScreenId, linkingState.fromElementId, addLink]);
+  }, [linkingState.fromScreenId, linkingState.fromElementId, linkingState.fromElementRectRelative, addLink]);
 
   const cancelLinking = useCallback(() => {
     setLinkingState({
@@ -203,6 +222,7 @@ export const PrototypeProvider = ({
       fromScreenId: null,
       fromElementId: null,
       fromElementRect: null,
+      fromElementRectRelative: null,
       clickPosition: null,
       mousePosition: null,
     });

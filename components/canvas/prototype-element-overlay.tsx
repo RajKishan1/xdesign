@@ -141,11 +141,21 @@ const PrototypeElementOverlay: React.FC<PrototypeElementOverlayProps> = ({
 
       if (!frameRect || !overlayRef.current) return;
 
-      // Get overlay position
+      // Get overlay position (overlay is positioned over the iframe)
       const overlayRect = overlayRef.current.getBoundingClientRect();
       
-      // Calculate element position in screen coordinates
-      const elementRect = new DOMRect(
+      // Element rect from iframe is relative to iframe viewport
+      // Overlay is positioned over iframe, so element position relative to overlay
+      // is what we need (this will be relative to screen content area)
+      const elementRectRelativeToOverlay = new DOMRect(
+        element.rect.left,
+        element.rect.top,
+        element.rect.width,
+        element.rect.height
+      );
+      
+      // Also calculate in viewport coordinates for the linking state
+      const elementRectViewport = new DOMRect(
         overlayRect.left + element.rect.left,
         overlayRect.top + element.rect.top,
         element.rect.width,
@@ -158,7 +168,8 @@ const PrototypeElementOverlay: React.FC<PrototypeElementOverlayProps> = ({
         y: e.clientY,
       };
 
-      startLinking(frameId, element.id, elementRect, clickPosition);
+      // Store both: viewport for linking state, and relative for final storage
+      startLinking(frameId, element.id, elementRectViewport, clickPosition, elementRectRelativeToOverlay);
     },
     [frameId, frameRect, startLinking]
   );

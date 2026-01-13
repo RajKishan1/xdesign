@@ -17,46 +17,115 @@ interface ConnectorArrowProps {
 // Calculate bezier curve path between two screens
 function calculateConnectorPath(
   fromPos: { x: number; y: number; width: number; height: number },
-  toPos: { x: number; y: number; width: number; height: number }
+  toPos: { x: number; y: number; width: number; height: number },
+  fromElementPos?: { x: number; y: number; width: number; height: number }
 ): { path: string; startX: number; startY: number; endX: number; endY: number } {
   // Calculate centers
-  const fromCenterX = fromPos.x + fromPos.width / 2;
-  const fromCenterY = fromPos.y + fromPos.height / 2;
   const toCenterX = toPos.x + toPos.width / 2;
   const toCenterY = toPos.y + toPos.height / 2;
 
-  // Determine which side to connect from/to
-  const dx = toCenterX - fromCenterX;
-  const dy = toCenterY - fromCenterY;
-
   let startX: number, startY: number, endX: number, endY: number;
 
-  // Connect from right side of source to left side of target (horizontal layout)
-  if (Math.abs(dx) > Math.abs(dy)) {
-    if (dx > 0) {
+  // If element position is provided, use it as the starting point
+  if (fromElementPos) {
+    // Element position is relative to the overlay/iframe area
+    // The overlay is positioned over the iframe, which is inside the device frame
+    // Device frame structure: Rnd -> container -> (title) -> rounded div -> white bg div -> iframe/overlay
+    // The element position is relative to the overlay (white bg div), so we need to add:
+    // - Screen position (Rnd position)
+    // - Title offset in prototype mode (~40px: mb-2 margin + title height)
+    // - Rounded container padding/border (minimal, ~0-2px)
+    // For simplicity, we'll use a small offset to account for title and padding
+    const frameContentOffset = 42; // Title area + small padding offset
+    
+    // Calculate absolute element position on canvas
+    const elementLeft = fromPos.x + fromElementPos.x;
+    const elementRight = fromPos.x + fromElementPos.x + fromElementPos.width;
+    const elementTop = fromPos.y + frameContentOffset + fromElementPos.y;
+    const elementBottom = fromPos.y + frameContentOffset + fromElementPos.y + fromElementPos.height;
+    const elementCenterX = (elementLeft + elementRight) / 2;
+    const elementCenterY = (elementTop + elementBottom) / 2;
+    
+    // Calculate direction to target
+    const dx = toCenterX - elementCenterX;
+    const dy = toCenterY - elementCenterY;
+    
+    // Determine which edge of the element to connect from
+    if (Math.abs(dx) > Math.abs(dy)) {
+      // Horizontal connection
+      if (dx > 0) {
+        // Target is to the right - connect from right edge of element
+        startX = elementRight;
+        startY = elementCenterY;
+      } else {
+        // Target is to the left - connect from left edge of element
+        startX = elementLeft;
+        startY = elementCenterY;
+      }
+    } else {
+      // Vertical connection
+      if (dy > 0) {
+        // Target is below - connect from bottom edge of element
+        startX = elementCenterX;
+        startY = elementBottom;
+      } else {
+        // Target is above - connect from top edge of element
+        startX = elementCenterX;
+        startY = elementTop;
+      }
+    }
+  } else {
+    // Fallback to screen center/edge connection (old behavior)
+    const fromCenterX = fromPos.x + fromPos.width / 2;
+    const fromCenterY = fromPos.y + fromPos.height / 2;
+    const dx = toCenterX - fromCenterX;
+    const dy = toCenterY - fromCenterY;
+
+    // Connect from right side of source to left side of target (horizontal layout)
+    if (Math.abs(dx) > Math.abs(dy)) {
+      if (dx > 0) {
+        // Target is to the right
+        startX = fromPos.x + fromPos.width;
+        startY = fromCenterY;
+      } else {
+        // Target is to the left
+        startX = fromPos.x;
+        startY = fromCenterY;
+      }
+    } else {
+      if (dy > 0) {
+        // Target is below
+        startX = fromCenterX;
+        startY = fromPos.y + fromPos.height;
+      } else {
+        // Target is above
+        startX = fromCenterX;
+        startY = fromPos.y;
+      }
+    }
+  }
+
+  // Determine which side of target to connect to
+  const finalDx = toCenterX - startX;
+  const finalDy = toCenterY - startY;
+
+  if (Math.abs(finalDx) > Math.abs(finalDy)) {
+    if (finalDx > 0) {
       // Target is to the right
-      startX = fromPos.x + fromPos.width;
-      startY = fromCenterY;
       endX = toPos.x;
       endY = toCenterY;
     } else {
       // Target is to the left
-      startX = fromPos.x;
-      startY = fromCenterY;
       endX = toPos.x + toPos.width;
       endY = toCenterY;
     }
   } else {
-    if (dy > 0) {
+    if (finalDy > 0) {
       // Target is below
-      startX = fromCenterX;
-      startY = fromPos.y + fromPos.height;
       endX = toCenterX;
       endY = toPos.y;
     } else {
       // Target is above
-      startX = fromCenterX;
-      startY = fromPos.y;
       endX = toCenterX;
       endY = toPos.y + toPos.height;
     }
@@ -67,18 +136,18 @@ function calculateConnectorPath(
   
   let cp1x: number, cp1y: number, cp2x: number, cp2y: number;
 
-  if (Math.abs(dx) > Math.abs(dy)) {
+  if (Math.abs(finalDx) > Math.abs(finalDy)) {
     // Horizontal connection
-    cp1x = startX + (dx > 0 ? controlOffset : -controlOffset);
+    cp1x = startX + (finalDx > 0 ? controlOffset : -controlOffset);
     cp1y = startY;
-    cp2x = endX + (dx > 0 ? -controlOffset : controlOffset);
+    cp2x = endX + (finalDx > 0 ? -controlOffset : controlOffset);
     cp2y = endY;
   } else {
     // Vertical connection
     cp1x = startX;
-    cp1y = startY + (dy > 0 ? controlOffset : -controlOffset);
+    cp1y = startY + (finalDy > 0 ? controlOffset : -controlOffset);
     cp2x = endX;
-    cp2y = endY + (dy > 0 ? -controlOffset : controlOffset);
+    cp2y = endY + (finalDy > 0 ? -controlOffset : controlOffset);
   }
 
   const path = `M ${startX} ${startY} C ${cp1x} ${cp1y}, ${cp2x} ${cp2y}, ${endX} ${endY}`;
@@ -95,8 +164,8 @@ const ConnectorArrow: React.FC<ConnectorArrowProps> = ({
   onDelete,
 }) => {
   const { path, endX, endY, startX, startY } = useMemo(
-    () => calculateConnectorPath(fromPos, toPos),
-    [fromPos, toPos]
+    () => calculateConnectorPath(fromPos, toPos, link.fromElementPosition),
+    [fromPos, toPos, link.fromElementPosition]
   );
 
   // Calculate arrow head rotation
