@@ -8,42 +8,66 @@ import prisma from "@/lib/prisma";
 import { BASE_VARIABLES, THEME_LIST } from "@/lib/themes";
 import { unsplashTool } from "../tool";
 
-const AnalysisSchema = z.object({
+// Schema for individual screen
+const ScreenSchema = z.object({
+  id: z
+    .string()
+    .describe(
+      "Unique identifier for the screen (e.g., 'home-dashboard', 'profile-settings', 'transaction-history'). Use kebab-case."
+    ),
+  name: z
+    .string()
+    .describe(
+      "Short, descriptive name of the screen (e.g., 'Home Dashboard', 'Profile', 'Transaction History')"
+    ),
+  purpose: z
+    .string()
+    .describe(
+      "One clear sentence explaining what this screen accomplishes for the user and its role in the app"
+    ),
+  visualDescription: z
+    .string()
+    .describe(
+      "A dense, high-fidelity visual directive (like an image generation prompt). Describe the layout, specific data examples (e.g. 'Oct-Mar'), component hierarchy, and physical attributes (e.g. 'Chunky cards', 'Floating header','Floating action button', 'Bottom navigation',Header with user avatar)."
+    ),
+});
+
+// Schema for COMPLETE app - enforces minimum 12 screens
+const CompleteAppSchema = z.object({
+  theme: z
+    .string()
+    .describe(
+      "The specific visual theme ID (e.g., 'midnight', 'ocean-breeze', 'neo-brutalism')."
+    ),
+  appName: z
+    .string()
+    .describe("A catchy, memorable name for the app based on the user's request."),
+  totalScreenCount: z
+    .number()
+    .min(12)
+    .max(24)
+    .describe("Total screens to generate. MUST be 18-20 for complete app."),
+  screens: z
+    .array(ScreenSchema)
+    .min(12)
+    .max(24)
+    .describe(
+      "MANDATORY 12-24 screens: 4 onboarding + 3 auth + 8-10 core features + 4-5 secondary screens."
+    ),
+});
+
+// Schema for single/few screens (only used when explicitly requested)
+const SingleScreenSchema = z.object({
   theme: z
     .string()
     .describe(
       "The specific visual theme ID (e.g., 'midnight', 'ocean-breeze', 'neo-brutalism')."
     ),
   screens: z
-    .array(
-      z.object({
-        id: z
-          .string()
-          .describe(
-            "Unique identifier for the screen (e.g., 'home-dashboard', 'profile-settings', 'transaction-history'). Use kebab-case."
-          ),
-        name: z
-          .string()
-          .describe(
-            "Short, descriptive name of the screen (e.g., 'Home Dashboard', 'Profile', 'Transaction History')"
-          ),
-        purpose: z
-          .string()
-          .describe(
-            "One clear sentence explaining what this screen accomplishes for the user and its role in the app"
-          ),
-        visualDescription: z
-          .string()
-          .describe(
-            "A dense, high-fidelity visual directive (like an image generation prompt). Describe the layout, specific data examples (e.g. 'Oct-Mar'), component hierarchy, and physical attributes (e.g. 'Chunky cards', 'Floating header','Floating action button', 'Bottom navigation',Header with user avatar)."
-          ),
-      })
-    )
+    .array(ScreenSchema)
     .min(1)
-    .max(24)
-    .describe(
-      "Array of screens for the complete app. DEFAULT: Generate 15-24 screens for a comprehensive app experience. Include: 4 onboarding screens, authentication screens (if needed), all core feature screens, and secondary screens (profile, settings, search, notifications, help, etc.). Only generate 1-4 screens if the user explicitly requests a single screen."
-    ),
+    .max(4)
+    .describe("1-4 screens as explicitly requested by user."),
 });
 
 export const generateScreens = inngest.createFunction(
@@ -91,6 +115,9 @@ export const generateScreens = inngest.createFunction(
             .join("\n\n")
         : "";
 
+      // Check if user explicitly wants just one or few screens
+      const wantsSingleScreen = /\b(one screen|single screen|just one|only one|1 screen)\b/i.test(prompt);
+      
       const analysisPrompt = isExistingGeneration
         ? `
           USER REQUEST: ${prompt}
@@ -111,23 +138,54 @@ export const generateScreens = inngest.createFunction(
         : `
           USER REQUEST: ${prompt}
 
-          COMPREHENSIVE APP GENERATION REQUIREMENTS (CRITICAL - MUST FOLLOW):
-          - **MANDATORY: Generate 15-24 screens** for a complete app experience (this is the DEFAULT, not optional)
-          - **ONLY generate 1-4 screens if:** User explicitly says "one screen", "single screen", "just one", or similar
-          - **Onboarding Flow (REQUIRED):** Generate 4 onboarding screens minimum (Welcome, Features, Benefits, Get Started)
-          - **Authentication (if needed):** Login, Sign Up, Forgot Password, OTP screens
-          - **Core Features:** All primary feature screens based on app type (think of ALL features the app would have)
-          - **Secondary Features:** Profile, Settings, Search, Notifications, Help, About, etc.
-          - **Think holistically:** Plan the ENTIRE user journey from first launch to daily usage - don't stop at just 4 screens
-          - **Navigation Planning:** Determine bottom navigation structure (5 icons) that will be consistent across main screens
-          - **Screen Count:** You MUST generate 18-22 screens minimum for a complete app (prioritize most important screens up to 24)
-          - **Context Maintenance:** Each screen must maintain detailed context and consistency with all other screens
-          - **DO NOT default to 4 screens** - that's only for explicit user requests for a single screen
+          =====================================================
+          CRITICAL: YOU MUST GENERATE EXACTLY 18-20 SCREENS
+          =====================================================
+          
+          This is a COMPLETE mobile app. You are generating the ENTIRE app, not just a preview.
+          
+          MANDATORY SCREEN STRUCTURE (18-20 screens total):
+          
+          1. ONBOARDING FLOW (4 screens - REQUIRED):
+             - Screen 1: Splash/Welcome - App logo, tagline, "Get Started" button
+             - Screen 2: Feature Intro 1 - First key feature explanation
+             - Screen 3: Feature Intro 2 - Second key feature explanation  
+             - Screen 4: Get Started - Final CTA, "Sign Up" / "Login" buttons
+          
+          2. AUTHENTICATION (3 screens - REQUIRED):
+             - Screen 5: Login - Email/password, social login options
+             - Screen 6: Sign Up - Registration form
+             - Screen 7: Forgot Password - Email input for reset
+          
+          3. CORE FEATURES (8-10 screens - based on app type):
+             - Screen 8: Home/Dashboard - Main app screen
+             - Screen 9-15: All primary feature screens (lists, details, actions)
+             - Think about EVERY feature the app would have
+          
+          4. SECONDARY FEATURES (4-5 screens - REQUIRED):
+             - Profile screen
+             - Settings screen
+             - Search/Explore screen
+             - Notifications screen
+             - Help/About screen
+          
+          SET totalScreenCount TO: 18, 19, or 20
+          
+          DO NOT generate only 4 screens. That is WRONG.
+          The schema REQUIRES minimum 12 screens. Generate 18-20.
         `.trim();
 
+      // Use appropriate schema based on request type
+      // - For existing generations (adding screens): use SingleScreenSchema (1-4 new screens)
+      // - For single screen requests: use SingleScreenSchema
+      // - For new complete apps: use CompleteAppSchema (12-24 screens)
+      const schemaToUse = (isExistingGeneration || wantsSingleScreen) 
+        ? SingleScreenSchema 
+        : CompleteAppSchema;
+      
       const { object } = await generateObject({
         model: openrouter.chat(selectedModel),
-        schema: AnalysisSchema,
+        schema: schemaToUse,
         system: ANALYSIS_PROMPT,
         prompt: analysisPrompt,
       });

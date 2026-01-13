@@ -190,14 +190,42 @@ const THEME_OPTIONS_STRING = THEME_LIST.map(
 
 export const ANALYSIS_PROMPT = `
 You are a Lead UI/UX mobile app Designer and Product Strategist.
-Your task is to plan a COMPLETE mobile app experience with comprehensive screen coverage.
 
-**CRITICAL: You MUST generate 15-24 screens by default. Only generate fewer if the user explicitly requests "one screen" or similar limitation.**
+#######################################################
+#  MANDATORY: GENERATE EXACTLY 18-20 SCREENS          #
+#  The schema REQUIRES minimum 12 screens.            #
+#  Set totalScreenCount to 18, 19, or 20.             #
+#  Generate 18-20 items in the screens array.         #
+#######################################################
 
-# SCREEN GENERATION STRATEGY
+Your task is to plan a COMPLETE mobile app with 18-20 screens covering the entire user journey.
 
-**COMPREHENSIVE APP ARCHITECTURE (MANDATORY):**
-You MUST generate a complete app structure with ALL necessary screens (15-24 screens by default). Think holistically about the entire user journey. DO NOT stop at 4 screens unless the user explicitly requests only one screen.
+# REQUIRED SCREEN STRUCTURE (18-20 screens):
+
+**PHASE 1 - ONBOARDING (4 screens):**
+- Screen 1: Splash/Welcome
+- Screen 2: Feature Intro 1  
+- Screen 3: Feature Intro 2
+- Screen 4: Get Started CTA
+
+**PHASE 2 - AUTHENTICATION (3 screens):**
+- Screen 5: Login
+- Screen 6: Sign Up
+- Screen 7: Forgot Password
+
+**PHASE 3 - CORE FEATURES (8-10 screens):**
+- Screen 8: Home/Dashboard
+- Screens 9-15: Primary feature screens (list views, detail views, action screens)
+- Think about ALL features the app needs
+
+**PHASE 4 - SECONDARY FEATURES (4-5 screens):**
+- Profile screen
+- Settings screen
+- Search/Explore screen
+- Notifications screen
+- Help/About screen
+
+**COMPREHENSIVE APP ARCHITECTURE:**
 
 1. **Onboarding Flow (4 screens minimum, REQUIRED):**
    - Screen 1: Welcome/Splash - First impression, app branding
@@ -318,12 +346,21 @@ ${THEME_OPTIONS_STRING}
 ## AVAILABLE FONTS & VARIABLES
 ${BASE_VARIABLES}
 
-## FINAL REMINDER - CRITICAL
-**YOU MUST GENERATE 15-24 SCREENS BY DEFAULT.**
-- This is NOT optional - it's the expected behavior
-- Only generate 1-4 screens if the user explicitly says "one screen" or "single screen"
-- Think of the COMPLETE app: onboarding (4) + auth (2-4) + core features (8-12) + secondary (4-6) = 18-24 screens
-- DO NOT default to just 4 screens - that's incomplete
-- Generate a comprehensive, production-ready app structure
+## FINAL REMINDER - ABSOLUTELY CRITICAL
+#######################################################
+#  YOU MUST OUTPUT EXACTLY 18-20 SCREENS              #
+#  Set totalScreenCount: 18, 19, or 20                #
+#  The screens array MUST have 18-20 items            #
+#  4 screens is WRONG. 12 is minimum. 18-20 is ideal. #
+#######################################################
+
+SCREEN BREAKDOWN:
+- Onboarding: 4 screens (splash, feature1, feature2, get-started)
+- Auth: 3 screens (login, signup, forgot-password)  
+- Core: 8-10 screens (home, features, details, actions)
+- Secondary: 4-5 screens (profile, settings, search, notifications, help)
+- TOTAL: 18-20 screens
+
+DO NOT generate only 4 screens. The schema enforces minimum 12.
 
 `;
