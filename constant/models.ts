@@ -19,8 +19,8 @@ export const AI_MODELS: ModelOption[] = [
     description: "Fast and efficient Gemini model",
   },
   {
-    id: "google/gemini-2.5-pro",
-    name: "Gemini 2.5 Pro",
+    id: "google/gemini-3-pro-preview",
+    name: "Gemini 3 Pro",
     provider: "Google",
     description: "Advanced Gemini Pro model",
   },

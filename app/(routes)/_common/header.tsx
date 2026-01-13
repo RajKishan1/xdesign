@@ -16,11 +16,17 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useGetProfile } from "@/features/use-profile";
 
 const Header = () => {
   const { theme, setTheme } = useTheme();
   const { user } = useKindeBrowserClient();
+  const { data: profile } = useGetProfile();
   const isDark = theme === "dark";
+  
+  // Use profile picture from database if available, otherwise fall back to Kinde
+  const profilePicture = profile?.profilePicture || user?.picture || "";
+  const displayName = profile?.name || `${user?.given_name || ""} ${user?.family_name || ""}`.trim() || "";
   return (
     <div className="sticky top-0 right-0 left-0 z-30">
       <header className="h-16 border-b bg-background py-4">
@@ -63,12 +69,12 @@ const Header = () => {
                   shrink-0 rounded-full"
                   >
                     <AvatarImage
-                      src={user?.picture || ""}
-                      alt={user?.given_name || ""}
+                      src={profilePicture}
+                      alt={displayName || user?.given_name || ""}
                     />
                     <AvatarFallback className="rounded-lg">
-                      {user?.given_name?.charAt(0)}
-                      {user?.family_name?.charAt(0)}
+                      {displayName ? displayName.split(' ').map(n => n.charAt(0)).join('').slice(0, 2) : 
+                       `${user?.given_name?.charAt(0) || ""}${user?.family_name?.charAt(0) || ""}`}
                     </AvatarFallback>
                   </Avatar>
                 </DropdownMenuTrigger>

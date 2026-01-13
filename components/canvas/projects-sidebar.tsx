@@ -13,6 +13,7 @@ import { ProjectType } from "@/types/project";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { ScrollArea } from "../ui/scroll-area";
 import { useGetCredits } from "@/features/use-credits";
+import { useGetProfile } from "@/features/use-profile";
 import { Coins } from "lucide-react";
 
 const ProjectsSidebar = () => {
@@ -21,6 +22,7 @@ const ProjectsSidebar = () => {
   const params = useParams();
   const currentProjectId = params.id as string;
   const { user } = useKindeBrowserClient();
+  const { data: profile } = useGetProfile();
   const { data: projects, isLoading: isLoadingProjects } = useGetProjects(
     user?.id,
     undefined // No limit - fetch all projects
@@ -28,6 +30,11 @@ const ProjectsSidebar = () => {
   const { data: credits, isLoading: isLoadingCredits } = useGetCredits(
     user?.id
   );
+  
+  // Use profile data from database if available, otherwise fall back to Kinde
+  const profilePicture = profile?.profilePicture || user?.picture || "";
+  const displayName = profile?.name || `${user?.given_name || ""} ${user?.family_name || ""}`.trim() || "";
+  const displayEmail = profile?.email || user?.email || "";
 
   const handleProjectClick = (projectId: string) => {
     router.push(`/project/${projectId}`);
@@ -169,24 +176,28 @@ const ProjectsSidebar = () => {
           </div>
 
           {/* User Info Section */}
-          <div className="border-t border-border p-4 flex-shrink-0">
+          <div 
+            className="border-t border-border p-4 flex-shrink-0 cursor-pointer hover:bg-accent/50 transition-colors"
+            onClick={() => router.push("/profile")}
+            role="button"
+          >
             <div className="flex items-center gap-3">
               <Avatar className="h-10 w-10 shrink-0 rounded-full">
                 <AvatarImage
-                  src={user?.picture || ""}
-                  alt={user?.given_name || ""}
+                  src={profilePicture}
+                  alt={displayName || user?.given_name || ""}
                 />
                 <AvatarFallback className="rounded-full">
-                  {user?.given_name?.charAt(0)}
-                  {user?.family_name?.charAt(0)}
+                  {displayName ? displayName.split(' ').map(n => n.charAt(0)).join('').slice(0, 2) : 
+                   `${user?.given_name?.charAt(0) || ""}${user?.family_name?.charAt(0) || ""}`}
                 </AvatarFallback>
               </Avatar>
               <div className="flex flex-col min-w-0 flex-1">
                 <p className="text-sm font-medium truncate">
-                  {user?.given_name} {user?.family_name}
+                  {displayName || `${user?.given_name || ""} ${user?.family_name || ""}`.trim()}
                 </p>
                 <p className="text-xs text-muted-foreground truncate">
-                  {user?.email}
+                  {displayEmail}
                 </p>
               </div>
             </div>

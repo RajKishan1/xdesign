@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { useGetProjectById } from "@/features/use-project-id";
 import { getHTMLWrapper } from "@/lib/frame-wrapper";
 import { THEME_LIST, parseThemeColors } from "@/lib/themes";
+import { DEFAULT_FONT, getFontById } from "@/constant/fonts";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import {
@@ -307,8 +308,9 @@ const PreviewPage = () => {
     );
   }
 
+  const defaultFont = getFontById(DEFAULT_FONT);
   const fullHtml = currentFrame
-    ? getHTMLWrapper(currentFrame.htmlContent, currentFrame.title, theme?.style, currentFrame.id, { previewMode: true })
+    ? getHTMLWrapper(currentFrame.htmlContent, currentFrame.title, theme?.style, currentFrame.id, { previewMode: true, font: defaultFont })
     : "";
 
   // Background classes based on theme

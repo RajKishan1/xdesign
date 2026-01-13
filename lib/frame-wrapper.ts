@@ -1,14 +1,16 @@
 import { BASE_VARIABLES, OCEAN_BREEZE_THEME } from "./themes";
+import { FontOption, DEFAULT_FONT, getFontById } from "@/constant/fonts";
 
 export function getHTMLWrapper(
   html: string,
   title = "Untitled",
   theme_style?: string,
   frameId?: string,
-  options?: { previewMode?: boolean }
+  options?: { previewMode?: boolean; font?: FontOption }
 ) {
   const finalTheme = theme_style || OCEAN_BREEZE_THEME;
   const isPreview = options?.previewMode || false;
+  const selectedFont = options?.font || getFontById(DEFAULT_FONT);
 
   // For preview mode, allow natural content flow and scrolling
   const previewStyles = isPreview ? `
@@ -37,7 +39,9 @@ export function getHTMLWrapper(
   <!-- Google Font -->
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-
+${selectedFont ? `  <link href="${selectedFont.googleFontUrl}" rel="stylesheet">` : ''}
+  
+  <!-- Keep existing fonts for backward compatibility -->
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100;200;300;400;500;600;700;800&amp;display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700;800&amp;display=swap" rel="stylesheet">
@@ -52,7 +56,7 @@ export function getHTMLWrapper(
     :root {${BASE_VARIABLES}${finalTheme}}
     *, *::before, *::after {margin:0;padding:0;box-sizing:border-box;}
     html, body {width:100%;min-height:100%;}
-    body {font-family:var(--font-sans);background:var(--background);color:var(--foreground);-webkit-font-smoothing:antialiased;}
+    body {font-family:"${selectedFont?.family || 'Plus Jakarta Sans'}", sans-serif;background:var(--background);color:var(--foreground);-webkit-font-smoothing:antialiased;}
     #root {width:100%;min-height:100vh;}
     * {scrollbar-width:none;-ms-overflow-style:none;}
     *::-webkit-scrollbar {display:none;}

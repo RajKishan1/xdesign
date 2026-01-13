@@ -3,6 +3,7 @@ import { useInngestSubscription } from "@inngest/realtime/hooks";
 import { fetchRealtimeSubscriptionToken } from "@/app/action/realtime";
 import { THEME_LIST, ThemeType } from "@/lib/themes";
 import { FrameType } from "@/types/project";
+import { POPULAR_FONTS, FontOption, DEFAULT_FONT } from "@/constant/fonts";
 import {
   createContext,
   ReactNode,
@@ -23,6 +24,10 @@ interface CanvasContextType {
   theme?: ThemeType;
   setTheme: (id: string) => void;
   themes: ThemeType[];
+
+  font?: FontOption;
+  setFont: (id: string) => void;
+  fonts: FontOption[];
 
   frames: FrameType[];
   setFrames: (frames: FrameType[]) => void;
@@ -56,6 +61,8 @@ export const CanvasProvider = ({
     initialThemeId || THEME_LIST[0].id
   );
 
+  const [fontId, setFontId] = useState<string>(DEFAULT_FONT);
+
   const [frames, setFrames] = useState<FrameType[]>(initialFrames);
   const [selectedFrameId, setSelectedFrameId] = useState<string | null>(null);
 
@@ -73,6 +80,7 @@ export const CanvasProvider = ({
   }
 
   const theme = THEME_LIST.find((t) => t.id === themeId);
+  const font = POPULAR_FONTS.find((f) => f.id === fontId) || POPULAR_FONTS.find((f) => f.id === DEFAULT_FONT);
   const selectedFrame =
     selectedFrameId && frames.length !== 0
       ? frames.find((f) => f.id === selectedFrameId) || null
@@ -174,6 +182,9 @@ export const CanvasProvider = ({
         theme,
         setTheme: setThemeId,
         themes: THEME_LIST,
+        font,
+        setFont: setFontId,
+        fonts: POPULAR_FONTS,
         frames,
         setFrames,
         selectedFrameId,

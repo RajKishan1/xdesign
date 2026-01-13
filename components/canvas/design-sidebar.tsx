@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 import { usePrototype } from "@/context/prototype-context";
 import { useCanvas } from "@/context/canvas-context";
 import { parseThemeColors, ThemeType } from "@/lib/themes";
-import { CheckIcon } from "lucide-react";
+import { CheckIcon, Type } from "lucide-react";
 
 interface DesignSidebarProps {
   projectId: string;
@@ -27,7 +27,7 @@ interface DesignSidebarProps {
   isPending: boolean;
 }
 
-type DesignTab = "chat" | "theme";
+type DesignTab = "chat" | "theme" | "fonts";
 
 const DesignSidebar = ({ onGenerate, isPending }: DesignSidebarProps) => {
   const {
@@ -38,7 +38,7 @@ const DesignSidebar = ({ onGenerate, isPending }: DesignSidebarProps) => {
     selectedLinkId,
     setSelectedLinkId,
   } = usePrototype();
-  const { frames, themes, theme: currentTheme, setTheme } = useCanvas();
+  const { frames, themes, theme: currentTheme, setTheme, fonts, font: currentFont, setFont } = useCanvas();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [promptText, setPromptText] = useState<string>("");
   const [activeTab, setActiveTab] = useState<DesignTab>("chat");
@@ -140,6 +140,17 @@ const DesignSidebar = ({ onGenerate, isPending }: DesignSidebarProps) => {
             >
               Theme
             </button>
+            <button
+              onClick={() => setActiveTab("fonts")}
+              className={cn(
+                "flex-1 flex items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-colors",
+                activeTab === "fonts"
+                  ? "text-foreground border-b-2 border-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              )}
+            >
+              <Type className="size-4" />
+            </button>
           </div>
 
           {activeTab === "chat" && (
@@ -189,17 +200,32 @@ const DesignSidebar = ({ onGenerate, isPending }: DesignSidebarProps) => {
             </div>
           )}
 
-          {/* Theme Tab Content */}
           {activeTab === "theme" && (
             <div className="flex flex-col h-full overflow-y-auto p-4">
-              <h3 className="font-semibold text-sm mb-4">Choose a theme</h3>
-              <div className="space-y-3">
+              <h3 className="font-medium mb-2">Choose a theme</h3>
+              <div className="space-y-1.5">
                 {themes?.map((theme) => (
                   <ThemeItem
                     key={theme.id}
                     theme={theme}
                     isSelected={currentTheme?.id === theme.id}
                     onSelect={() => setTheme(theme.id)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeTab === "fonts" && (
+            <div className="flex flex-col h-full overflow-y-auto p-4">
+              <h3 className="font-medium mb-2">Choose a font</h3>
+              <div className="space-y-1.5">
+                {fonts?.map((font) => (
+                  <FontItem
+                    key={font.id}
+                    font={font}
+                    isSelected={currentFont?.id === font.id}
+                    onSelect={() => setFont(font.id)}
                   />
                 ))}
               </div>
@@ -318,11 +344,11 @@ function ThemeItem({
     <button
       onClick={onSelect}
       className={cn(
-        `flex items-center justify-between w-full
-        p-1 rounded-xl border gap-4 bg-background
-        hover:border-primary/50 hover:bg-accent/50
+        `flex items-center justify-between w-full cursor-pointer
+        px-2 py-1.5 rounded-lg border gap-3 dark:bg-[#2c2c2c]
+        bg-gray-100
         `,
-        isSelected ? "border-2" : "border"
+        isSelected ? "border-1" : "border-none"
       )}
       style={{
         borderColor: isSelected ? color.primary : "",
@@ -342,9 +368,51 @@ function ThemeItem({
       </div>
 
       <div className="flex items-center gap-2 flex-[0.9]">
-        <span className="text-sm">{theme.name}</span>
+        <span className="text-sm text-neutral-600 dark:text-neutral-400">
+          {theme.name}
+        </span>
         {isSelected && <CheckIcon size={16} color={color.primary} />}
       </div>
+    </button>
+  );
+}
+
+function FontItem({
+  font,
+  isSelected,
+  onSelect,
+}: {
+  font: { id: string; name: string; family: string; category: string };
+  isSelected: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <button
+      onClick={onSelect}
+      className={cn(
+        `flex items-center justify-between w-full cursor-pointer
+        px-3 py-2.5 rounded-lg border gap-3 dark:bg-[#2c2c2c]
+        bg-gray-100 transition-colors
+        `,
+        isSelected 
+          ? "border-2 border-foreground bg-foreground/5 dark:bg-foreground/10" 
+          : "border-none hover:bg-gray-200 dark:hover:bg-[#353535]"
+      )}
+    >
+      <div className="flex flex-col items-start flex-1 min-w-0">
+        <span 
+          className="text-sm font-medium text-neutral-700 dark:text-neutral-300 truncate w-full"
+          style={{ fontFamily: font.family }}
+        >
+          {font.name}
+        </span>
+        <span className="text-xs text-muted-foreground capitalize">
+          {font.category}
+        </span>
+      </div>
+      {isSelected && (
+        <CheckIcon size={16} className="text-foreground flex-shrink-0" />
+      )}
     </button>
   );
 }

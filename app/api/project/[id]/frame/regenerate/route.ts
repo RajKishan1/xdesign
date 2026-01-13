@@ -69,10 +69,13 @@ export async function POST(
       );
     }
 
-    // Deduct credits
+    // Deduct credits and track total used
     await prisma.user.update({
       where: { userId: user.id },
-      data: { credits: userRecord.credits - creditCost },
+      data: { 
+        credits: userRecord.credits - creditCost,
+        totalCreditsUsed: (userRecord.totalCreditsUsed || 0) + creditCost,
+      },
     });
 
     // Trigger inngest function

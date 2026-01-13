@@ -68,9 +68,10 @@ const DeviceFrame = ({
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   
+  const { font } = useCanvas();
   const isSelected = selectedFrameId === frameId;
   const isPrototypeMode = mode === "prototype";
-  const fullHtml = getHTMLWrapper(html, title, theme_style, frameId);
+  const fullHtml = getHTMLWrapper(html, title, theme_style, frameId, { font });
 
   // Update screen position for connector drawing
   useEffect(() => {
