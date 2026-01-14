@@ -38,7 +38,7 @@ const CanvasFloatingToolbar = ({
             <Button
               variant="outline"
               size="icon-sm"
-              className="rounded-lg border-none cursor-pointer"
+              className="rounded-none border-none cursor-pointer"
               disabled={isScreenshotting}
               onClick={onScreenshot}
             >
@@ -51,7 +51,7 @@ const CanvasFloatingToolbar = ({
             <Button
               variant="default"
               size="sm"
-              className="rounded-lg font-normal cursor-pointer"
+              className="rounded-none font-normal cursor-pointer"
               onClick={handleUpdate}
             >
               {update.isPending ? (
@@ -66,7 +66,7 @@ const CanvasFloatingToolbar = ({
             <Button
               variant="outline"
               size="sm"
-              className="rounded-lg border-none font-normal cursor-pointer"
+              className="rounded-none border-none font-normal cursor-pointer"
               onClick={() => setIsExportModalOpen(true)}
             >
               <Download className="size-4" />

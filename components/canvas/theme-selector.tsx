@@ -42,7 +42,7 @@ function ThemeItem({
       onClick={onSelect}
       className={cn(
         `flex items-center justify-between w-full
-        p-1 rounded-xl border gap-4 bg-background
+        p-1 rounded-none border gap-4 bg-background
         hover:border-primary/50 hover:bg-accent/50
         `,
         isSelected ? "border-2" : "border"

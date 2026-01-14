@@ -38,7 +38,15 @@ const DesignSidebar = ({ onGenerate, isPending }: DesignSidebarProps) => {
     selectedLinkId,
     setSelectedLinkId,
   } = usePrototype();
-  const { frames, themes, theme: currentTheme, setTheme, fonts, font: currentFont, setFont } = useCanvas();
+  const {
+    frames,
+    themes,
+    theme: currentTheme,
+    setTheme,
+    fonts,
+    font: currentFont,
+    setFont,
+  } = useCanvas();
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [promptText, setPromptText] = useState<string>("");
   const [activeTab, setActiveTab] = useState<DesignTab>("chat");
@@ -157,13 +165,13 @@ const DesignSidebar = ({ onGenerate, isPending }: DesignSidebarProps) => {
             <div className="flex flex-col h-full p-4">
               <div className="flex-1" />
 
-              <div className="flex flex-col gap-0 bg-[#F4F4F5] dark:bg-[#242424] rounded-[12px] border-none shadow-sm">
+              <div className="flex flex-col gap-0 bg-[#F4F4F5] dark:bg-[#242424] rounded-none border-none shadow-sm">
                 <div className="p-3 pb-2">
                   <Textarea
                     placeholder="What changes do you want to make ?"
                     value={promptText}
                     onChange={(e) => setPromptText(e.target.value)}
-                    className="min-h-[80px] resize-none border-0 bg-white shadow-none focus-visible:ring-0 placeholder:text-muted-foreground"
+                    className="min-h-[80px] rounded-none resize-none border-0 bg-white shadow-none focus-visible:ring-0 placeholder:text-muted-foreground"
                   />
                 </div>
                 <div className="flex items-center justify-between px-3 pb-3 gap-2">
@@ -180,7 +188,7 @@ const DesignSidebar = ({ onGenerate, isPending }: DesignSidebarProps) => {
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-8 px-2 text-muted-foreground hover:text-foreground bg-muted/50"
+                      className="h-8 px-2 rounded-none text-muted-foreground hover:text-foreground bg-muted/50"
                       type="button"
                     >
                       <Sparkles className="size-4" />
@@ -188,7 +196,7 @@ const DesignSidebar = ({ onGenerate, isPending }: DesignSidebarProps) => {
 
                     <Button
                       disabled={isPending || !promptText.trim()}
-                      className="h-8 px-4 bg-foreground text-background hover:bg-foreground/90 rounded-md"
+                      className="h-8 px-4 bg-foreground text-background hover:bg-foreground/90 rounded-none"
                       onClick={handleGenerate}
                       type="button"
                     >
@@ -345,7 +353,7 @@ function ThemeItem({
       onClick={onSelect}
       className={cn(
         `flex items-center justify-between w-full cursor-pointer
-        px-2 py-1.5 rounded-lg border gap-3 dark:bg-[#2c2c2c]
+        px-2 py-1.5 rounded-none border gap-3 dark:bg-[#2c2c2c]
         bg-gray-100
         `,
         isSelected ? "border-1" : "border-none"
@@ -391,16 +399,16 @@ function FontItem({
       onClick={onSelect}
       className={cn(
         `flex items-center justify-between w-full cursor-pointer
-        px-3 py-2.5 rounded-lg border gap-3 dark:bg-[#2c2c2c]
+        px-3 py-2.5 rounded-none border gap-3 dark:bg-[#2c2c2c]
         bg-gray-100 transition-colors
         `,
-        isSelected 
-          ? "border-2 border-foreground bg-foreground/5 dark:bg-foreground/10" 
+        isSelected
+          ? "border-2 border-foreground bg-foreground/5 dark:bg-foreground/10"
           : "border-none hover:bg-gray-200 dark:hover:bg-[#353535]"
       )}
     >
       <div className="flex flex-col items-start flex-1 min-w-0">
-        <span 
+        <span
           className="text-sm font-medium text-neutral-700 dark:text-neutral-300 truncate w-full"
           style={{ fontFamily: font.family }}
         >

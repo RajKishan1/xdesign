@@ -41,7 +41,9 @@ const CompleteAppSchema = z.object({
     ),
   appName: z
     .string()
-    .describe("A catchy, memorable name for the app based on the user's request."),
+    .describe(
+      "A catchy, memorable name for the app based on the user's request."
+    ),
   totalScreenCount: z
     .number()
     .min(12)
@@ -116,8 +118,11 @@ export const generateScreens = inngest.createFunction(
         : "";
 
       // Check if user explicitly wants just one or few screens
-      const wantsSingleScreen = /\b(one screen|single screen|just one|only one|1 screen)\b/i.test(prompt);
-      
+      const wantsSingleScreen =
+        /\b(one screen|single screen|just one|only one|1 screen)\b/i.test(
+          prompt
+        );
+
       const analysisPrompt = isExistingGeneration
         ? `
           USER REQUEST: ${prompt}
@@ -179,10 +184,11 @@ export const generateScreens = inngest.createFunction(
       // - For existing generations (adding screens): use SingleScreenSchema (1-4 new screens)
       // - For single screen requests: use SingleScreenSchema
       // - For new complete apps: use CompleteAppSchema (12-24 screens)
-      const schemaToUse = (isExistingGeneration || wantsSingleScreen) 
-        ? SingleScreenSchema 
-        : CompleteAppSchema;
-      
+      const schemaToUse =
+        isExistingGeneration || wantsSingleScreen
+          ? SingleScreenSchema
+          : CompleteAppSchema;
+
       const { object } = await generateObject({
         model: openrouter.chat(selectedModel),
         schema: schemaToUse,
@@ -257,7 +263,10 @@ export const generateScreens = inngest.createFunction(
           VISUAL DESCRIPTION: ${screenPlan.visualDescription}
 
           EXISTING SCREENS CONTEXT (CRITICAL - MAINTAIN CONSISTENCY):
-          ${previousFramesContext || "No previous screens - this is the first screen"}
+          ${
+            previousFramesContext ||
+            "No previous screens - this is the first screen"
+          }
 
           THEME VARIABLES (Reference ONLY - already defined in parent, do NOT redeclare these):
           ${fullThemeCSS}

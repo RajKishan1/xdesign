@@ -30,10 +30,13 @@ const ProjectsSidebar = () => {
   const { data: credits, isLoading: isLoadingCredits } = useGetCredits(
     user?.id
   );
-  
+
   // Use profile data from database if available, otherwise fall back to Kinde
   const profilePicture = profile?.profilePicture || user?.picture || "";
-  const displayName = profile?.name || `${user?.given_name || ""} ${user?.family_name || ""}`.trim() || "";
+  const displayName =
+    profile?.name ||
+    `${user?.given_name || ""} ${user?.family_name || ""}`.trim() ||
+    "";
   const displayEmail = profile?.email || user?.email || "";
 
   const handleProjectClick = (projectId: string) => {
@@ -138,7 +141,7 @@ const ProjectsSidebar = () => {
                         role="button"
                         onClick={() => handleProjectClick(project.id)}
                         className={cn(
-                          "flex flex-col gap-0 m-0 px-2 py-1.5 rounded-lg cursor-pointer transition-colors",
+                          "flex flex-col gap-0 m-0 px-2 py-1.5 rounded-none cursor-pointer transition-colors",
                           isActive
                             ? "bg-primary/10 border-primary"
                             : "hover:bg-primary/20 border-border"
@@ -162,7 +165,7 @@ const ProjectsSidebar = () => {
 
           {/* Credits Section */}
           <div className="border-t border-border px-4 py-3 flex-shrink-0">
-            <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-primary/5 border border-primary/20">
+            <div className="flex items-center gap-2 px-2 py-1.5 rounded-none bg-primary/5 border border-primary/20">
               <Coins className="size-4 text-primary" />
               <div className="flex flex-col min-w-0 flex-1">
                 <p className="text-xs font-medium text-primary">
@@ -176,7 +179,7 @@ const ProjectsSidebar = () => {
           </div>
 
           {/* User Info Section */}
-          <div 
+          <div
             className="border-t border-border p-4 flex-shrink-0 cursor-pointer hover:bg-accent/50 transition-colors"
             onClick={() => router.push("/profile")}
             role="button"
@@ -188,13 +191,23 @@ const ProjectsSidebar = () => {
                   alt={displayName || user?.given_name || ""}
                 />
                 <AvatarFallback className="rounded-full">
-                  {displayName ? displayName.split(' ').map(n => n.charAt(0)).join('').slice(0, 2) : 
-                   `${user?.given_name?.charAt(0) || ""}${user?.family_name?.charAt(0) || ""}`}
+                  {displayName
+                    ? displayName
+                        .split(" ")
+                        .map((n) => n.charAt(0))
+                        .join("")
+                        .slice(0, 2)
+                    : `${user?.given_name?.charAt(0) || ""}${
+                        user?.family_name?.charAt(0) || ""
+                      }`}
                 </AvatarFallback>
               </Avatar>
               <div className="flex flex-col min-w-0 flex-1">
                 <p className="text-sm font-medium truncate">
-                  {displayName || `${user?.given_name || ""} ${user?.family_name || ""}`.trim()}
+                  {displayName ||
+                    `${user?.given_name || ""} ${
+                      user?.family_name || ""
+                    }`.trim()}
                 </p>
                 <p className="text-xs text-muted-foreground truncate">
                   {displayEmail}

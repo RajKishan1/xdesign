@@ -59,7 +59,7 @@ const Header = ({
             <Button
               variant="outline"
               size="icon"
-              className="relative border-none rounded-lg h-8 w-8"
+              className="relative border-none rounded-none h-8 w-8"
               onClick={() => setTheme(isDark ? "light" : "dark")}
             >
               <SunIcon
