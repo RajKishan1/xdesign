@@ -27,7 +27,7 @@ const Header = ({
     <div className="sticky top-0">
       <header
         className="border-b
-    bg-white dark:bg-[#1D1D1D] border-neutral-200 dark:border-[#2b2b2b]  backdrop-blur-sm
+    bg-white dark:bg-[#191919] border-neutral-200 dark:border-[#212121]  backdrop-blur-sm
     "
       >
         <div

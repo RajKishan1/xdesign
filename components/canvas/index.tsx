@@ -34,7 +34,7 @@ const Canvas = ({
     loadingStatus,
     setLoadingStatus,
   } = useCanvas();
-  
+
   const {
     mode,
     linkingState,
@@ -42,7 +42,7 @@ const Canvas = ({
     cancelLinking,
     setSelectedLinkId,
   } = usePrototype();
-  
+
   const [toolMode, setToolMode] = useState<ToolModeType>(TOOL_MODE_ENUM.SELECT);
   const [zoomPercent, setZoomPercent] = useState<number>(53);
   const [currentScale, setCurrentScale] = useState<number>(0.53);
@@ -81,7 +81,7 @@ const Canvas = ({
         cancelLinking();
       }
     };
-    
+
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [linkingState.isLinking, cancelLinking]);
@@ -229,7 +229,7 @@ const Canvas = ({
                 ref={canvasRootRef}
                 className={cn(
                   `absolute inset-0 w-full h-full bg-[#F4F4F5]
-                  dark:bg-[#1b1b1b] p-3
+                  dark:bg-[#131313] p-3
               `,
                   toolMode === TOOL_MODE_ENUM.HAND
                     ? "cursor-grab active:cursor-grabbing"
@@ -259,10 +259,10 @@ const Canvas = ({
                     position: "relative",
                   }}
                 >
-                  <div 
+                  <div
                     className="relative"
-                    style={{ 
-                      width: "4000px", 
+                    style={{
+                      width: "4000px",
                       height: "3000px",
                       position: "relative",
                     }}
@@ -291,7 +291,7 @@ const Canvas = ({
                         />
                       );
                     })}
-                    
+
                     {/* Prototype connector arrows layer - rendered on top */}
                     <PrototypeConnectors canvasScale={currentScale} />
                   </div>

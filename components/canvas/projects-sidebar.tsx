@@ -14,7 +14,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { ScrollArea } from "../ui/scroll-area";
 import { useGetCredits } from "@/features/use-credits";
 import { useGetProfile } from "@/features/use-profile";
-import { Coins } from "lucide-react";
 
 const ProjectsSidebar = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -46,7 +45,7 @@ const ProjectsSidebar = () => {
   return (
     <div
       className={cn(
-        "relative flex flex-col bg-white dark:bg-[#1D1D1D] border-neutral-200 dark:border-[#2b2b2b] border-r transition-all duration-300 ease-in-out",
+        "relative flex flex-col bg-white dark:bg-[#191919] border-neutral-200 dark:border-[#212121] border-r transition-all duration-300 ease-in-out",
         isCollapsed ? "w-12" : "w-64"
       )}
     >
@@ -165,7 +164,7 @@ const ProjectsSidebar = () => {
             </ScrollArea>
           </div>
 
-          <div className="border-t border-neutral-200 dark:border-[#2b2b2b] px-4 py-3 flex-shrink-0">
+          <div className="border-t border-neutral-200 dark:border-[#212121] px-4 py-3 flex-shrink-0">
             <div className="flex items-center gap-2 px-2 py-1.5 rounded-none">
               <div className="flex gap-2.5 items-center min-w-0 flex-1">
                 <p className="text-sm font-medium">
@@ -181,7 +180,7 @@ const ProjectsSidebar = () => {
           </div>
 
           <div
-            className="border-t border-neutral-200 dark:border-[#2b2b2b] p-4 flex-shrink-0 cursor-pointer hover:bg-accent/50 transition-colors"
+            className="border-t border-neutral-200 dark:border-[#212121] p-4 flex-shrink-0 cursor-pointer hover:bg-accent/50 transition-colors"
             onClick={() => router.push("/profile")}
             role="button"
           >

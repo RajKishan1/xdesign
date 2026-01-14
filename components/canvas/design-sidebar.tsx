@@ -61,7 +61,7 @@ const DesignSidebar = ({ onGenerate, isPending }: DesignSidebarProps) => {
   return (
     <div
       className={cn(
-        "relative flex flex-col bg-white dark:bg-[#1D1D1D] border-l border-neutral-200 dark:border-[#2b2b2b] transition-all duration-300 ease-in-out",
+        "relative flex flex-col bg-white dark:bg-[#191919] border-l border-neutral-200 dark:border-[#212121] transition-all duration-300 ease-in-out",
         isCollapsed ? "w-12" : "w-72"
       )}
     >
@@ -171,7 +171,7 @@ const DesignSidebar = ({ onGenerate, isPending }: DesignSidebarProps) => {
                     placeholder="What changes do you want to make ?"
                     value={promptText}
                     onChange={(e) => setPromptText(e.target.value)}
-                    className="min-h-[80px] rounded-none resize-none border-0 bg-white shadow-none focus-visible:ring-0 placeholder:text-muted-foreground"
+                    className="min-h-[80px] rounded-none resize-none  border-0 bg-white dark:bg-[#202020] shadow-none focus-visible:ring-0 placeholder:text-neutral-500"
                   />
                 </div>
                 <div className="flex items-center justify-between px-3 pb-3 gap-2">
