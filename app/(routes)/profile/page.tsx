@@ -47,7 +47,9 @@ const ProfilePage = () => {
   });
   const [uploadingProfilePic, setUploadingProfilePic] = useState(false);
   const [uploadingHeader, setUploadingHeader] = useState(false);
-  const [profilePicPreview, setProfilePicPreview] = useState<string | null>(null);
+  const [profilePicPreview, setProfilePicPreview] = useState<string | null>(
+    null
+  );
   const [headerPreview, setHeaderPreview] = useState<string | null>(null);
 
   React.useEffect(() => {
@@ -104,7 +106,7 @@ const ProfilePage = () => {
 
       const imageUrl = data.data.url;
       setEditForm({ ...editForm, [type]: imageUrl });
-      
+
       if (type === "profilePicture") {
         setProfilePicPreview(imageUrl);
       } else {
@@ -149,22 +151,22 @@ const ProfilePage = () => {
     );
   }
 
-  const displayName = profile?.name || `${kindeUser?.given_name || ""} ${kindeUser?.family_name || ""}`.trim() || "User";
+  const displayName =
+    profile?.name ||
+    `${kindeUser?.given_name || ""} ${kindeUser?.family_name || ""}`.trim() ||
+    "User";
   const displayEmail = profile?.email || kindeUser?.email || "";
-  const displayProfilePicture = profile?.profilePicture || kindeUser?.picture || "";
+  const displayProfilePicture =
+    profile?.profilePicture || kindeUser?.picture || "";
   const displayHeaderImage = profile?.headerImage || "";
 
   return (
     <div className="w-full min-h-screen bg-background">
       <Header />
-      
+
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Back Button */}
-        <Button
-          variant="ghost"
-          onClick={() => router.back()}
-          className="mb-4"
-        >
+        <Button variant="ghost" onClick={() => router.back()} className="mb-4">
           <ArrowLeft className="size-4 mr-2" />
           Back
         </Button>
@@ -186,7 +188,7 @@ const ProfilePage = () => {
 
         {/* Profile Info Section */}
         <div className="relative -mt-16 md:-mt-20 px-4 md:px-8">
-          <div className="flex flex-col md:flex-row md:items-end gap-4 pb-6 border-b">
+          <div className="flex flex-col md:flex-row md:items-end gap-4 pb-6">
             <div className="relative">
               <Avatar className="h-24 w-24 md:h-32 md:w-32 border-4 border-background">
                 <AvatarImage src={displayProfilePicture} alt={displayName} />
@@ -195,7 +197,7 @@ const ProfilePage = () => {
                 </AvatarFallback>
               </Avatar>
             </div>
-            
+
             <div className="flex-1 flex flex-col md:flex-row md:items-end md:justify-between gap-4">
               <div>
                 <h1 className="text-2xl md:text-3xl font-semibold mb-1">
@@ -203,8 +205,11 @@ const ProfilePage = () => {
                 </h1>
                 <p className="text-muted-foreground">{displayEmail}</p>
               </div>
-              
-              <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+
+              <Dialog
+                open={isEditDialogOpen}
+                onOpenChange={setIsEditDialogOpen}
+              >
                 <DialogTrigger asChild>
                   <Button variant="outline">
                     <Edit2 className="size-4 mr-2" />
@@ -256,7 +261,10 @@ const ProfilePage = () => {
                               type="button"
                               onClick={() => {
                                 setProfilePicPreview(null);
-                                setEditForm({ ...editForm, profilePicture: "" });
+                                setEditForm({
+                                  ...editForm,
+                                  profilePicture: "",
+                                });
                               }}
                               className="absolute top-0 right-0 bg-destructive text-destructive-foreground rounded-full p-1 hover:bg-destructive/90"
                             >
@@ -270,10 +278,15 @@ const ProfilePage = () => {
                             type="file"
                             accept="image/*"
                             className="hidden"
-                            onChange={(e) => handleFileChange(e, "profilePicture")}
+                            onChange={(e) =>
+                              handleFileChange(e, "profilePicture")
+                            }
                             disabled={uploadingProfilePic}
                           />
-                          <label htmlFor="profilePicture-upload" className="flex-1">
+                          <label
+                            htmlFor="profilePicture-upload"
+                            className="flex-1"
+                          >
                             <Button
                               type="button"
                               variant="outline"
@@ -345,7 +358,10 @@ const ProfilePage = () => {
                             onChange={(e) => handleFileChange(e, "headerImage")}
                             disabled={uploadingHeader}
                           />
-                          <label htmlFor="headerImage-upload" className="flex-1">
+                          <label
+                            htmlFor="headerImage-upload"
+                            className="flex-1"
+                          >
                             <Button
                               type="button"
                               variant="outline"
@@ -411,7 +427,6 @@ const ProfilePage = () => {
           </div>
         </div>
 
-        {/* Credits Section */}
         <div className="mt-8 p-6 rounded-lg border bg-card">
           <div className="flex items-center gap-2 mb-4">
             <Coins className="size-5 text-primary" />
@@ -433,7 +448,6 @@ const ProfilePage = () => {
           </div>
         </div>
 
-        {/* Projects Section */}
         <div className="mt-8">
           <h2 className="text-xl font-semibold mb-4">All Projects</h2>
           {isLoadingProjects ? (
@@ -473,9 +487,7 @@ const ProjectCard = memo(({ project }: { project: ProjectType }) => {
       className="w-full flex flex-col border rounded-xl cursor-pointer hover:shadow-sm overflow-hidden transition-shadow"
       onClick={onRoute}
     >
-      <div
-        className="h-40 bg-[#eee] dark:bg-[#2b2b2b] relative overflow-hidden flex items-center justify-center"
-      >
+      <div className="h-40 bg-[#eee] dark:bg-[#2b2b2b] relative overflow-hidden flex items-center justify-center">
         {thumbnail ? (
           <img
             src={thumbnail}

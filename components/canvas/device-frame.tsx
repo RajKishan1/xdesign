@@ -331,6 +331,7 @@ const DeviceFrame = ({
             ) : (
               <>
                 <iframe
+                  key={`${frameId}-${font?.id || 'default'}`}
                   ref={iframeRef}
                   srcDoc={fullHtml}
                   title={title}
