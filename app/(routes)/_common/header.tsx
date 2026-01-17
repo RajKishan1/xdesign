@@ -23,14 +23,16 @@ const Header = () => {
   const { user } = useKindeBrowserClient();
   const { data: profile } = useGetProfile();
   const isDark = theme === "dark";
-  
+
   // Use profile picture from database if available, otherwise fall back to Kinde
   const profilePicture = profile?.profilePicture || user?.picture || "";
-  const displayName = profile?.name || `${user?.given_name || ""} ${user?.family_name || ""}`.trim() || "";
+  const displayName =
+    profile?.name ||
+    `${user?.given_name || ""} ${user?.family_name || ""}`.trim() ||
+    "";
   return (
-    <div className="sticky top-0 right-0 left-0 z-30 ">
-      <header className="h-16 border-b border-accent-background py-4 bg-black">
-
+    <div className="sticky top-0 right-0 left-0 z-30  ">
+      <header className="h-16 border-x border-zinc-900 px-6  py-4 bg-zinc-200 dark:bg-black">
         <div
           className="w-full max-w-6xl mx-auto
          flex items-center justify-between"
@@ -74,8 +76,13 @@ const Header = () => {
                       alt={displayName || user?.given_name || ""}
                     />
                     <AvatarFallback className="rounded-lg">
-                      {displayName ? displayName.split(' ').map(n => n.charAt(0)).join('').slice(0, 2) : 
-                       `${user?.given_name?.charAt(0) || ""}${user?.family_name?.charAt(0) || ""}`}
+                      {displayName
+                        ? displayName
+                            .split(" ")
+                            .map((n) => n.charAt(0))
+                            .join("")
+                            .slice(0, 2)
+                        : `${user?.given_name?.charAt(0) || ""}${user?.family_name?.charAt(0) || ""}`}
                     </AvatarFallback>
                   </Avatar>
                 </DropdownMenuTrigger>

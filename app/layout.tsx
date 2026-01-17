@@ -21,7 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${jostSans.className} antialiased bg-black`}>
+      <body className={`${jostSans.className} antialiased bg-zinc-200 dark:bg-black`}>
         <QueryProvider>
           <ThemeProvider
             attribute="class"

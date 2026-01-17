@@ -53,10 +53,10 @@ const PromptInput = ({
   )?.provider;
 
   return (
-    <div className="bg-background">
+    <div className="bg-zinc-950">
       <InputGroup
         className={cn(
-          "min-h-[172px] rounded-3xl bg-background ",
+          "min-h-50  bg-zinc-950 ",
           className && className
         )}
       >

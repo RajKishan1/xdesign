@@ -15,12 +15,14 @@ import Faq from "@/components/landing/Faq";
 import HowItWorks from "@/components/landing/HowItWorks";
 import PricingPage from "@/components/landing/PricingPage";
 import FeaturesBento from "@/components/landing/FeaturesBento";
+import { Inter_Tight } from "next/font/google";
+const inter = Inter_Tight({ subsets: ["latin"] });
 
 const LandingSection = () => {
   const { user } = useKindeBrowserClient();
   const [promptText, setPromptText] = useState<string>("");
   const [selectedModel, setSelectedModel] = useState<string>(
-    "google/gemini-3-pro-preview"
+    "google/gemini-3-pro-preview",
   );
   const [showAllProjects, setShowAllProjects] = useState(false);
   const userId = user?.id;
@@ -98,7 +100,10 @@ const LandingSection = () => {
       <div className="flex flex-col ">
         <Header />
 
-        <div className="relative overflow-hidden pt-28">
+        <div
+          className={`relative overflow-hidden py-28 border border-zinc-900
+           ${inter.className}`}
+        >
           <div
             className="max-w-6xl mx-auto flex flex-col
          items-center justify-center gap-8
@@ -107,14 +112,14 @@ const LandingSection = () => {
             <div className="space-y-3">
               <h1
                 className="text-center font-semibold text-4xl
-            tracking-tight sm:text-5xl
+            tracking-tight sm:text-5xl bg-linear-to-r from-zinc-900 dark:from-white to-zinc-800 bg-clip-text text-transparent pb-1
             "
               >
                 Design mobile apps <br className="md:hidden" />
                 <span className="text-primary">in minutes</span>
               </h1>
               <div className="mx-auto max-w-2xl ">
-                <p className="text-center font-medium text-foreground leading-relaxed sm:text-lg">
+                <p className="text-center font-normal text-foreground leading-relaxed sm:text-lg">
                   Go from idea to beautiful app mockups in minutes by chatting
                   with AI.
                 </p>
@@ -123,12 +128,12 @@ const LandingSection = () => {
 
             <div
               className="flex w-full max-w-3xl flex-col
-            item-center gap-8 relative z-50
+            item-center gap-8 relative 
             "
             >
               <div className="w-full">
                 <PromptInput
-                  className="ring-2 ring-primary"
+                  className=""
                   promptText={promptText}
                   setPromptText={setPromptText}
                   isLoading={isPending}
@@ -138,13 +143,14 @@ const LandingSection = () => {
                 />
               </div>
 
-              <div className="flex flex-wrap justify-center gap-2 px-5">
+              <div className="flex flex-wrap justify-center">
                 <Suggestions>
                   {suggestions.map((s) => (
                     <Suggestion
                       key={s.label}
                       suggestion={s.label}
-                      className="text-xs! h-7! px-2.5 pt-1!"
+                      className="text-sm! h-7!   dark:bg-zinc-900 border border-zinc-900
+                      "
                       onClick={() => handleSuggestionClick(s.value)}
                     >
                       {s.icon}
@@ -157,7 +163,7 @@ const LandingSection = () => {
           </div>
         </div>
 
-        <div className="w-full py-10">
+        <div className="w-full py-10 border-x border-zinc-900">
           <div className="mx-auto max-w-3xl">
             {userId && (
               <div>
@@ -193,7 +199,7 @@ const LandingSection = () => {
                         <Button
                           variant="outline"
                           onClick={() => setShowAllProjects(true)}
-                          className="px-6"
+                          className="px-6 rounded-none"
                         >
                           Show All Projects
                         </Button>
@@ -208,10 +214,11 @@ const LandingSection = () => {
           </div>
         </div>
       </div>
+
+      <FeaturesBento />
       <PricingPage />
       <HowItWorks />
       <Faq />
-      <FeaturesBento />
     </div>
   );
 };
@@ -229,13 +236,13 @@ const ProjectCard = memo(({ project }: { project: ProjectType }) => {
   return (
     <div
       role="button"
-      className="w-full flex flex-col border rounded-xl cursor-pointer
+      className="w-full flex flex-col border border-zinc-900 rounded-none cursor-pointer
     hover:shadow-sm overflow-hidden
     "
       onClick={onRoute}
     >
       <div
-        className="h-40 bg-[#eee] relative overflow-hidden
+        className="h-40 bg-[#eee] dark:bg-zinc-800 relative overflow-hidden
         flex items-center justify-center
         "
       >
