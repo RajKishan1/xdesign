@@ -32,8 +32,8 @@ type PropsType = {
 const DeviceFrame = ({
   html,
   title = "Untitled",
-  width = 420,
-  minHeight = 800,
+  width = 430, // iPhone 17 Pro Max width
+  minHeight = 932, // iPhone 17 Pro Max height
   initialPosition = { x: 0, y: 0 },
   frameId,
   scale = 1,
@@ -52,9 +52,13 @@ const DeviceFrame = ({
     cancelLinking,
   } = usePrototype();
   
+  // Fixed iPhone 17 Pro Max dimensions
+  const IPHONE_PRO_MAX_WIDTH = 430;
+  const IPHONE_PRO_MAX_HEIGHT = 932;
+  
   const [frameSize, setFrameSize] = useState({
-    width,
-    height: minHeight,
+    width: IPHONE_PRO_MAX_WIDTH,
+    height: IPHONE_PRO_MAX_HEIGHT,
   });
   const [framePosition, setFramePosition] = useState(initialPosition);
   const [frameRect, setFrameRect] = useState<DOMRect | null>(null);
@@ -75,13 +79,13 @@ const DeviceFrame = ({
 
   // Update screen position for connector drawing
   useEffect(() => {
-    updateScreenPosition(frameId, {
+      updateScreenPosition(frameId, {
       x: framePosition.x,
       y: framePosition.y,
-      width: frameSize.width,
-      height: typeof frameSize.height === 'number' ? frameSize.height : 800,
+      width: IPHONE_PRO_MAX_WIDTH,
+      height: IPHONE_PRO_MAX_HEIGHT,
     });
-  }, [frameId, framePosition, frameSize, updateScreenPosition]);
+  }, [frameId, framePosition, updateScreenPosition]);
 
   // Track frame rect for element overlay
   useEffect(() => {
@@ -99,23 +103,24 @@ const DeviceFrame = ({
       window.removeEventListener('resize', updateRect);
       window.removeEventListener('scroll', updateRect);
     };
-  }, [framePosition, frameSize]);
+  }, [framePosition]);
 
-  useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      if (
-        event.data.type === "FRAME_HEIGHT" &&
-        event.data.frameId === frameId
-      ) {
-        setFrameSize((prev) => ({
-          ...prev,
-          height: event.data.height,
-        }));
-      }
-    };
-    window.addEventListener("message", handleMessage);
-    return () => window.removeEventListener("message", handleMessage);
-  }, [frameId]);
+  // Disable dynamic height updates - use fixed iPhone 17 Pro Max dimensions
+  // useEffect(() => {
+  //   const handleMessage = (event: MessageEvent) => {
+  //     if (
+  //       event.data.type === "FRAME_HEIGHT" &&
+  //       event.data.frameId === frameId
+  //     ) {
+  //       setFrameSize((prev) => ({
+  //         ...prev,
+  //         height: event.data.height,
+  //       }));
+  //     }
+  //   };
+  //   window.addEventListener("message", handleMessage);
+  //   return () => window.removeEventListener("message", handleMessage);
+  // }, [frameId]);
 
   const handleDownloadPng = useCallback(async () => {
     if (isDownloading) return;
@@ -125,8 +130,8 @@ const DeviceFrame = ({
         "/api/screenshot",
         {
           html: fullHtml,
-          width: frameSize.width,
-          height: frameSize.height,
+          width: IPHONE_PRO_MAX_WIDTH,
+          height: IPHONE_PRO_MAX_HEIGHT,
         },
         {
           responseType: "blob",
@@ -147,7 +152,7 @@ const DeviceFrame = ({
     } finally {
       setIsDownloading(false);
     }
-  }, [frameSize.height, frameSize.width, fullHtml, isDownloading, title]);
+  }, [fullHtml, isDownloading, title]);
 
   const handleRegenerate = useCallback(
     (prompt: string) => {
@@ -178,8 +183,8 @@ const DeviceFrame = ({
       await copyDesignToFigma(
         iframeRef.current,
         html,
-        frameSize.width,
-        frameSize.height,
+        IPHONE_PRO_MAX_WIDTH,
+        IPHONE_PRO_MAX_HEIGHT,
         title
       );
 
@@ -190,7 +195,7 @@ const DeviceFrame = ({
     } finally {
       setIsCopyingToFigma(false);
     }
-  }, [html, frameSize.width, frameSize.height, title, isCopyingToFigma]);
+  }, [html, title, isCopyingToFigma]);
 
   // Handle click in prototype mode - used for drop target
   const handlePrototypeClick = useCallback(
@@ -209,18 +214,20 @@ const DeviceFrame = ({
       default={{
         x: initialPosition.x,
         y: initialPosition.y,
-        width,
-        height: frameSize.height,
+        width: IPHONE_PRO_MAX_WIDTH,
+        height: IPHONE_PRO_MAX_HEIGHT,
       }}
-      minWidth={width}
-      minHeight={minHeight}
+      minWidth={IPHONE_PRO_MAX_WIDTH}
+      maxWidth={IPHONE_PRO_MAX_WIDTH}
+      minHeight={IPHONE_PRO_MAX_HEIGHT}
+      maxHeight={IPHONE_PRO_MAX_HEIGHT}
       size={{
-        width: frameSize.width,
-        height: frameSize.height,
+        width: IPHONE_PRO_MAX_WIDTH,
+        height: IPHONE_PRO_MAX_HEIGHT,
       }}
       position={framePosition}
       disableDragging={toolMode === TOOL_MODE_ENUM.HAND || isPrototypeMode}
-      enableResizing={isSelected && toolMode !== TOOL_MODE_ENUM.HAND && !isPrototypeMode}
+      enableResizing={false} // Disable resizing to maintain fixed iPhone dimensions
       scale={scale}
       onDragStop={(e, d) => {
         setFramePosition({ x: d.x, y: d.y });
@@ -253,10 +260,11 @@ const DeviceFrame = ({
         right: { cursor: "ew-resize" },
       }}
       onResize={(e, direction, ref) => {
-        setFrameSize({
-          width: parseInt(ref.style.width),
-          height: parseInt(ref.style.height),
-        });
+        // Prevent resizing - keep fixed iPhone dimensions
+        // setFrameSize({
+        //   width: parseInt(ref.style.width),
+        //   height: parseInt(ref.style.height),
+        // });
       }}
       className={cn(
         "relative z-10",
@@ -323,9 +331,9 @@ const DeviceFrame = ({
               <DeviceFrameSkeleton
                 style={{
                   position: "relative",
-                  width,
-                  minHeight: minHeight,
-                  height: `${frameSize.height}px`,
+                  width: IPHONE_PRO_MAX_WIDTH,
+                  minHeight: IPHONE_PRO_MAX_HEIGHT,
+                  height: `${IPHONE_PRO_MAX_HEIGHT}px`,
                 }}
               />
             ) : (
@@ -338,8 +346,8 @@ const DeviceFrame = ({
                   sandbox="allow-scripts allow-same-origin"
                   style={{
                     width: "100%",
-                    minHeight: `${minHeight}px`,
-                    height: `${frameSize.height}px`,
+                    minHeight: `${IPHONE_PRO_MAX_HEIGHT}px`,
+                    height: `${IPHONE_PRO_MAX_HEIGHT}px`,
                     border: "none",
                     pointerEvents: "none",
                     display: "block",

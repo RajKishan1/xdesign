@@ -26,6 +26,7 @@ const LandingSection = () => {
     "google/gemini-3-pro-preview"
   );
   const [showAllProjects, setShowAllProjects] = useState(false);
+  const [isEnhancing, setIsEnhancing] = useState(false);
   const userId = user?.id;
 
   // Fetch limited projects initially, all projects when showAllProjects is true
@@ -91,9 +92,40 @@ const LandingSection = () => {
     setPromptText(val);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!promptText) return;
-    mutate({ prompt: promptText, model: selectedModel });
+    
+    // Start enhancing the prompt
+    setIsEnhancing(true);
+    
+    try {
+      const enhanceResponse = await fetch("/api/enhance-prompt", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          prompt: promptText,
+          model: selectedModel,
+        }),
+      });
+
+      const enhanceData = await enhanceResponse.json();
+      
+      // Use the enhanced prompt if available, otherwise fallback to original
+      const finalPrompt = enhanceData.enhancedPrompt || promptText;
+      
+      // Stop enhancing state, start designing
+      setIsEnhancing(false);
+      
+      // Create project with enhanced prompt
+      mutate({ prompt: finalPrompt, model: selectedModel });
+    } catch (error) {
+      console.error("Error enhancing prompt:", error);
+      // If enhancement fails, proceed with original prompt
+      setIsEnhancing(false);
+      mutate({ prompt: promptText, model: selectedModel });
+    }
   };
 
   return (
@@ -144,7 +176,8 @@ const LandingSection = () => {
                   className=""
                   promptText={promptText}
                   setPromptText={setPromptText}
-                  isLoading={isPending}
+                  isLoading={isEnhancing || isPending}
+                  loadingText={isEnhancing ? "Enhancing..." : isPending ? "Designing..." : undefined}
                   onSubmit={handleSubmit}
                   selectedModel={selectedModel}
                   onModelChange={handleModelChange}

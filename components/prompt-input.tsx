@@ -24,6 +24,7 @@ interface PropsType {
   promptText: string;
   setPromptText: (value: string) => void;
   isLoading?: boolean;
+  loadingText?: string;
   className?: string;
   hideSubmitBtn?: boolean;
   onSubmit?: () => void;
@@ -34,6 +35,7 @@ const PromptInput = ({
   promptText,
   setPromptText,
   isLoading,
+  loadingText,
   className,
   hideSubmitBtn = false,
   onSubmit,
@@ -125,7 +127,10 @@ const PromptInput = ({
               onClick={() => onSubmit?.()}
             >
               {isLoading ? (
-                <Spinner />
+                <>
+                  <Spinner />
+                  {loadingText && <span className="ml-2">{loadingText}</span>}
+                </>
               ) : (
                 <>
                   Design
