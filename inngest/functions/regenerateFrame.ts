@@ -1,6 +1,6 @@
 import { generateText, stepCountIs } from "ai";
 import { inngest } from "../client";
-import { openrouter } from "@/lib/openrouter";
+import { getModel } from "@/lib/models";
 import { GENERATION_SYSTEM_PROMPT } from "@/lib/prompt";
 import prisma from "@/lib/prisma";
 import { BASE_VARIABLES, THEME_LIST } from "@/lib/themes";
@@ -20,7 +20,7 @@ export const regenerateFrame = inngest.createFunction(
       frame,
     } = event.data;
     const CHANNEL = `user:${userId}`;
-    const selectedModel = model || "google/gemini-3-pro-preview";
+    const selectedModel = model || "google/gemini-3-flash-preview";
 
     await publish({
       channel: CHANNEL,
@@ -42,7 +42,8 @@ export const regenerateFrame = inngest.createFunction(
       `;
 
       const result = await generateText({
-        model: openrouter.chat(selectedModel),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        model: getModel(selectedModel) as any,
         system: GENERATION_SYSTEM_PROMPT,
         tools: {
           searchUnsplash: unsplashTool,

@@ -95,7 +95,6 @@ const LandingSection = () => {
   const handleSubmit = async () => {
     if (!promptText) return;
     
-    // Start enhancing the prompt
     setIsEnhancing(true);
     
     try {

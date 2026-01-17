@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { openrouter } from "@/lib/openrouter";
+import { getModel } from "@/lib/models";
 import { generateText } from "ai";
 
 const ENHANCEMENT_SYSTEM_PROMPT = `You are a world-class Senior Brand & Product Designer with 20+ years of experience crafting iconic digital products. You've led design at companies like Apple, Airbnb, Stripe, and Figma. You've built design systems used by millions and created brands that people emotionally connect with.
@@ -112,11 +112,12 @@ export async function POST(request: Request) {
       );
     }
 
-    const selectedModel = model || "google/gemini-3-pro-preview";
+    const selectedModel = model || "google/gemini-3-flash-preview";
 
     // Enhance the prompt using AI
     const { text: enhancedPrompt } = await generateText({
-      model: openrouter.chat(selectedModel),
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      model: getModel(selectedModel) as any,
       system: ENHANCEMENT_SYSTEM_PROMPT,
       prompt: `Enhance this design prompt with your expertise as a senior UI/UX designer:\n\n${prompt}`,
       temperature: 0.7, // Some creativity but still focused

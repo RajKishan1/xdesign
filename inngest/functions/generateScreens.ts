@@ -1,7 +1,7 @@
 import { generateObject, generateText, stepCountIs } from "ai";
 import { inngest } from "../client";
 import { z } from "zod";
-import { openrouter } from "@/lib/openrouter";
+import { getModel } from "@/lib/models";
 import { FrameType } from "@/types/project";
 import { ANALYSIS_PROMPT, GENERATION_SYSTEM_PROMPT } from "@/lib/prompt";
 import prisma from "@/lib/prisma";
@@ -86,7 +86,7 @@ export const generateScreens = inngest.createFunction(
     } = event.data;
     const CHANNEL = `user:${userId}`;
     const isExistingGeneration = Array.isArray(frames) && frames.length > 0;
-    const selectedModel = model || "google/gemini-3-pro-preview";
+    const selectedModel = model || "google/gemini-3-flash-preview";
 
     await publish({
       channel: CHANNEL,
@@ -190,7 +190,8 @@ export const generateScreens = inngest.createFunction(
           : CompleteAppSchema;
 
       const { object } = await generateObject({
-        model: openrouter.chat(selectedModel),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        model: getModel(selectedModel) as any,
         schema: schemaToUse,
         system: ANALYSIS_PROMPT,
         prompt: analysisPrompt,
@@ -248,7 +249,8 @@ export const generateScreens = inngest.createFunction(
 
       await step.run(`generated-screen-${i}`, async () => {
         const result = await generateText({
-          model: openrouter.chat(selectedModel),
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          model: getModel(selectedModel) as any,
           system: GENERATION_SYSTEM_PROMPT,
           tools: {
             searchUnsplash: unsplashTool,

@@ -7,6 +7,7 @@ import { getHTMLWrapper } from "@/lib/frame-wrapper";
 import { THEME_LIST, parseThemeColors } from "@/lib/themes";
 import { DEFAULT_FONT, getFontById } from "@/constant/fonts";
 import { cn } from "@/lib/utils";
+import { FrameType } from "@/types/project";
 import { Button } from "@/components/ui/button";
 import {
   ArrowLeft,
@@ -128,7 +129,7 @@ const PreviewPage = () => {
 
   // Get current frame
   const currentFrame = useMemo(() => {
-    return frames.find((f) => f.id === currentScreenId);
+    return frames.find((f: FrameType) => f.id === currentScreenId);
   }, [frames, currentScreenId]);
 
   // Navigate to a screen - use ref to avoid stale closure
