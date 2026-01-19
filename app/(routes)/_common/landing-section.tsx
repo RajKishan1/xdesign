@@ -27,6 +27,7 @@ const LandingSection = () => {
     "google/gemini-3-pro-preview",
   );
   const [showAllProjects, setShowAllProjects] = useState(false);
+  const [isEnhancing, setIsEnhancing] = useState(false);
   const userId = user?.id;
 
   // Fetch limited projects initially, all projects when showAllProjects is true
@@ -92,9 +93,37 @@ const LandingSection = () => {
     setPromptText(val);
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!promptText) return;
-    mutate({ prompt: promptText, model: selectedModel });
+    
+    setIsEnhancing(true);
+    try {
+      // First, enhance the prompt
+      const enhanceResponse = await fetch("/api/enhance-prompt", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          prompt: promptText,
+          model: selectedModel,
+        }),
+      });
+
+      const enhanceData = await enhanceResponse.json();
+      
+      // Use enhanced prompt if available, otherwise fallback to original
+      const finalPrompt = enhanceData.enhancedPrompt || promptText;
+      
+      // Then create the project with enhanced prompt
+      mutate({ prompt: finalPrompt, model: selectedModel });
+    } catch (error) {
+      console.error("Error enhancing prompt:", error);
+      // Fallback to original prompt if enhancement fails
+      mutate({ prompt: promptText, model: selectedModel });
+    } finally {
+      setIsEnhancing(false);
+    }
   };
 
   return (
@@ -141,7 +170,7 @@ const LandingSection = () => {
                   className=""
                   promptText={promptText}
                   setPromptText={setPromptText}
-                  isLoading={isPending}
+                  isLoading={isEnhancing || isPending}
                   onSubmit={handleSubmit}
                   selectedModel={selectedModel}
                   onModelChange={handleModelChange}

@@ -32,8 +32,8 @@ const ScreenSchema = z.object({
     ),
 });
 
-// Schema for COMPLETE app - enforces minimum 12 screens
-const CompleteAppSchema = z.object({
+// Flexible schema that adapts to user's request
+const FlexibleAppSchema = z.object({
   theme: z
     .string()
     .describe(
@@ -46,30 +46,16 @@ const CompleteAppSchema = z.object({
     ),
   totalScreenCount: z
     .number()
-    .min(12)
+    .min(1)
     .max(24)
-    .describe("Total screens to generate. MUST be 18-20 for complete app."),
-  screens: z
-    .array(ScreenSchema)
-    .min(12)
-    .max(24)
-    .describe(
-      "MANDATORY 12-24 screens: 4 onboarding + 3 auth + 8-10 core features + 4-5 secondary screens."
-    ),
-});
-
-// Schema for single/few screens (only used when explicitly requested)
-const SingleScreenSchema = z.object({
-  theme: z
-    .string()
-    .describe(
-      "The specific visual theme ID (e.g., 'midnight', 'ocean-breeze', 'neo-brutalism')."
-    ),
+    .describe("Exact number of screens requested by user or appropriate for the app scope."),
   screens: z
     .array(ScreenSchema)
     .min(1)
-    .max(4)
-    .describe("1-4 screens as explicitly requested by user."),
+    .max(24)
+    .describe(
+      "Screens matching the user's request. Generate the exact number and types of screens they asked for."
+    ),
 });
 
 export const generateScreens = inngest.createFunction(
@@ -117,12 +103,6 @@ export const generateScreens = inngest.createFunction(
             .join("\n\n")
         : "";
 
-      // Check if user explicitly wants just one or few screens
-      const wantsSingleScreen =
-        /\b(one screen|single screen|just one|only one|1 screen)\b/i.test(
-          prompt
-        );
-
       const analysisPrompt = isExistingGeneration
         ? `
           USER REQUEST: ${prompt}
@@ -144,50 +124,41 @@ export const generateScreens = inngest.createFunction(
           USER REQUEST: ${prompt}
 
           =====================================================
-          CRITICAL: YOU MUST GENERATE EXACTLY 18-20 SCREENS
+          CRITICAL: READ THE USER'S REQUEST CAREFULLY
           =====================================================
           
-          This is a COMPLETE mobile app. You are generating the ENTIRE app, not just a preview.
+          ANALYZE THE USER'S PROMPT TO DETERMINE:
+          1. How many screens they want (look for numbers like "4 screens", "12 screens", "6 screens", etc.)
+          2. What type of screens they need (specific features vs complete app)
+          3. Whether they mentioned onboarding, authentication, or specific flows
           
-          MANDATORY SCREEN STRUCTURE (18-20 screens total):
+          RULES FOR SCREEN GENERATION:
+          - If user specifies a number (e.g., "4 screens", "12 screens"), generate EXACTLY that many
+          - If user asks for specific screens (e.g., "login and home screen"), generate only those
+          - If user asks for a "complete app" without specifying count, generate 12-18 screens with:
+            * Onboarding (2-3 screens) if appropriate for the app type
+            * Authentication (login, signup) if the app needs user accounts
+            * Core feature screens (the main functionality)
+            * Supporting screens (profile, settings) if relevant
+          - If user asks for "single screen" or "one screen", generate exactly 1 screen
           
-          1. ONBOARDING FLOW (4 screens - REQUIRED):
-             - Screen 1: Splash/Welcome - App logo, tagline, "Get Started" button
-             - Screen 2: Feature Intro 1 - First key feature explanation
-             - Screen 3: Feature Intro 2 - Second key feature explanation  
-             - Screen 4: Get Started - Final CTA, "Sign Up" / "Login" buttons
+          FLEXIBILITY IS KEY:
+          - NOT all apps need onboarding (e.g., utility apps, calculators)
+          - NOT all apps need authentication (e.g., weather apps, converters)
+          - Focus on what the user ACTUALLY requested
+          - Don't force a structure that doesn't fit the request
           
-          2. AUTHENTICATION (3 screens - REQUIRED):
-             - Screen 5: Login - Email/password, social login options
-             - Screen 6: Sign Up - Registration form
-             - Screen 7: Forgot Password - Email input for reset
+          EXAMPLES:
+          - "Create 4 screens for a todo app" → Generate exactly 4 screens (e.g., home, add task, task detail, settings)
+          - "Design a complete fitness app" → Generate 12-15 screens (onboarding, login, dashboard, workouts, etc.)
+          - "Single home screen for weather app" → Generate exactly 1 screen
+          - "Login and signup screens" → Generate exactly 2 screens
           
-          3. CORE FEATURES (8-10 screens - based on app type):
-             - Screen 8: Home/Dashboard - Main app screen
-             - Screen 9-15: All primary feature screens (lists, details, actions)
-             - Think about EVERY feature the app would have
-          
-          4. SECONDARY FEATURES (4-5 screens - REQUIRED):
-             - Profile screen
-             - Settings screen
-             - Search/Explore screen
-             - Notifications screen
-             - Help/About screen
-          
-          SET totalScreenCount TO: 18, 19, or 20
-          
-          DO NOT generate only 4 screens. That is WRONG.
-          The schema REQUIRES minimum 12 screens. Generate 18-20.
+          Set totalScreenCount based on the user's actual request, not a predetermined formula.
         `.trim();
 
-      // Use appropriate schema based on request type
-      // - For existing generations (adding screens): use SingleScreenSchema (1-4 new screens)
-      // - For single screen requests: use SingleScreenSchema
-      // - For new complete apps: use CompleteAppSchema (12-24 screens)
-      const schemaToUse =
-        isExistingGeneration || wantsSingleScreen
-          ? SingleScreenSchema
-          : CompleteAppSchema;
+      // Always use the flexible schema
+      const schemaToUse = FlexibleAppSchema;
 
       const { object } = await generateObject({
         model: openrouter.chat(selectedModel),

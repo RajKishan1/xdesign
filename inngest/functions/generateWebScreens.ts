@@ -32,8 +32,8 @@ const ScreenSchema = z.object({
     ),
 });
 
-// Schema for COMPLETE web app - enforces minimum 8 screens
-const CompleteAppSchema = z.object({
+// Flexible schema that adapts to user's request
+const FlexibleAppSchema = z.object({
   theme: z
     .string()
     .describe(
@@ -46,30 +46,16 @@ const CompleteAppSchema = z.object({
     ),
   totalScreenCount: z
     .number()
-    .min(8)
+    .min(1)
     .max(20)
-    .describe("Total screens to generate. MUST be 10-15 for complete web app."),
-  screens: z
-    .array(ScreenSchema)
-    .min(8)
-    .max(20)
-    .describe(
-      "MANDATORY 8-20 screens: 2-3 auth + 6-10 core features + 3-5 secondary screens."
-    ),
-});
-
-// Schema for single/few screens (only used when explicitly requested)
-const SingleScreenSchema = z.object({
-  theme: z
-    .string()
-    .describe(
-      "The specific visual theme ID (e.g., 'midnight', 'ocean-breeze', 'neo-brutalism')."
-    ),
+    .describe("Exact number of screens requested by user or appropriate for the app scope."),
   screens: z
     .array(ScreenSchema)
     .min(1)
-    .max(4)
-    .describe("1-4 screens as explicitly requested by user."),
+    .max(20)
+    .describe(
+      "Screens matching the user's request. Generate the exact number and types of screens they asked for."
+    ),
 });
 
 export const generateWebScreens = inngest.createFunction(
@@ -117,12 +103,6 @@ export const generateWebScreens = inngest.createFunction(
             .join("\n\n")
         : "";
 
-      // Check if user explicitly wants just one or few screens
-      const wantsSingleScreen =
-        /\b(one screen|single screen|just one|only one|1 screen)\b/i.test(
-          prompt
-        );
-
       const analysisPrompt = isExistingGeneration
         ? `
           USER REQUEST: ${prompt}
@@ -144,41 +124,41 @@ export const generateWebScreens = inngest.createFunction(
           USER REQUEST: ${prompt}
 
           =====================================================
-          CRITICAL: YOU MUST GENERATE EXACTLY 10-15 SCREENS
+          CRITICAL: READ THE USER'S REQUEST CAREFULLY
           =====================================================
           
-          This is a COMPLETE web application. You are generating the ENTIRE app, not just a preview.
+          ANALYZE THE USER'S PROMPT TO DETERMINE:
+          1. How many screens they want (look for numbers like "4 screens", "12 screens", "6 screens", etc.)
+          2. What type of screens they need (specific features vs complete app)
+          3. Whether they mentioned authentication, dashboard, or specific flows
           
-          MANDATORY SCREEN STRUCTURE (10-15 screens total):
+          RULES FOR SCREEN GENERATION:
+          - If user specifies a number (e.g., "4 screens", "12 screens"), generate EXACTLY that many
+          - If user asks for specific screens (e.g., "dashboard and analytics"), generate only those
+          - If user asks for a "complete web app" without specifying count, generate 8-15 screens with:
+            * Authentication (login, signup) if the app needs user accounts
+            * Dashboard/Home as the main screen
+            * Core feature screens (the main functionality)
+            * Supporting screens (settings, profile, admin) if relevant
+          - If user asks for "single screen" or "one screen", generate exactly 1 screen
           
-          1. AUTHENTICATION (2-3 screens - REQUIRED if login needed):
-             - Screen 1: Login - Email/password, social login options
-             - Screen 2: Sign Up - Registration form
-             - Screen 3: Forgot Password (optional) - Email input for reset
+          FLEXIBILITY IS KEY:
+          - NOT all web apps need authentication (e.g., landing pages, documentation sites)
+          - NOT all web apps need admin panels
+          - Focus on what the user ACTUALLY requested
+          - Don't force a structure that doesn't fit the request
           
-          2. CORE FEATURES (6-10 screens - based on app type):
-             - Screen 1: Dashboard/Home - Main application screen with overview
-             - Screen 2-8: All primary feature screens (lists, details, actions, analytics)
-             - Think about EVERY major feature the web app would have
+          EXAMPLES:
+          - "Create 4 screens for a dashboard" → Generate exactly 4 screens (e.g., overview, analytics, reports, settings)
+          - "Design a complete CRM web app" → Generate 10-12 screens (login, dashboard, contacts, deals, etc.)
+          - "Single landing page" → Generate exactly 1 screen
+          - "Login and dashboard screens" → Generate exactly 2 screens
           
-          3. SECONDARY FEATURES (3-5 screens - REQUIRED):
-             - Settings/Preferences screen
-             - User Profile screen
-             - Help/Documentation screen
-             - Admin/Management screen (if applicable)
-             - Reports/Analytics screen (if applicable)
-          
-          SET totalScreenCount TO: 10, 12, 13, or 15
-          
-          DO NOT generate only 3-4 screens. That is WRONG.
-          The schema REQUIRES minimum 8 screens. Generate 10-15.
+          Set totalScreenCount based on the user's actual request, not a predetermined formula.
         `.trim();
 
-      // Use appropriate schema based on request type
-      const schemaToUse =
-        isExistingGeneration || wantsSingleScreen
-          ? SingleScreenSchema
-          : CompleteAppSchema;
+      // Always use the flexible schema
+      const schemaToUse = FlexibleAppSchema;
 
       const { object } = await generateObject({
         model: openrouter.chat(selectedModel),
