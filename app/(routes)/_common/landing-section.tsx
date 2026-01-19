@@ -16,15 +16,15 @@ import HowItWorks from "@/components/landing/HowItWorks";
 import PricingPage from "@/components/landing/PricingPage";
 import FeaturesBento from "@/components/landing/FeaturesBento";
 import { Inter_Tight } from "next/font/google";
-import HeroGlobeBackground from "@/components/landing/atoms/HeroGlobeBackground";
 import { DeviceTypeModal } from "@/components/device-type-modal";
+import { BlurFade } from "@/components/ui/blur-fade";
 const inter = Inter_Tight({ subsets: ["latin"] });
 
 const LandingSection = () => {
   const { user } = useKindeBrowserClient();
   const [promptText, setPromptText] = useState<string>("");
   const [selectedModel, setSelectedModel] = useState<string>(
-    "google/gemini-3-pro-preview"
+    "google/gemini-3-pro-preview",
   );
   const [showAllProjects, setShowAllProjects] = useState(false);
   const [isEnhancing, setIsEnhancing] = useState(false);
@@ -97,7 +97,7 @@ const LandingSection = () => {
 
   const handleSubmit = async () => {
     if (!promptText) return;
-    
+
     // Show device type modal first
     setPendingPrompt(promptText);
     setShowDeviceTypeModal(true);
@@ -105,10 +105,10 @@ const LandingSection = () => {
 
   const handleDeviceTypeSelect = async (deviceType: "web" | "mobile") => {
     setShowDeviceTypeModal(false);
-    
+
     // Start enhancing the prompt
     setIsEnhancing(true);
-    
+
     try {
       const enhanceResponse = await fetch("/api/enhance-prompt", {
         method: "POST",
@@ -122,13 +122,13 @@ const LandingSection = () => {
       });
 
       const enhanceData = await enhanceResponse.json();
-      
+
       // Use the enhanced prompt if available, otherwise fallback to original
       const finalPrompt = enhanceData.enhancedPrompt || pendingPrompt;
-      
+
       // Stop enhancing state, start designing
       setIsEnhancing(false);
-      
+
       // Create project with enhanced prompt and device type
       mutate({ prompt: finalPrompt, model: selectedModel, deviceType });
     } catch (error) {
@@ -146,81 +146,88 @@ const LandingSection = () => {
         onOpenChange={setShowDeviceTypeModal}
         onSelect={handleDeviceTypeSelect}
       />
-      
+
       <div className="flex flex-col ">
         <Header />
 
-        <div
-          className={`relative overflow-hidden py-28 border border-zinc-900
+        <BlurFade>
+          <div
+            className={`relative overflow-hidden py-28 border border-zinc-900
            ${inter.className}`}
-        >
-          <div
-            className="absolute inset-0  top-[-50]
-           z-[-1]"
           >
-            {" "}
-            <HeroGlobeBackground theme="dark" />
-          </div>
-          <div
-            className="max-w-6xl mx-auto flex flex-col
+            <div
+              className="absolute inset-0  top-[-50]
+           z-[-1]"
+            >
+              {" "}
+            </div>
+            <div
+              className="max-w-6xl mx-auto flex flex-col
          items-center justify-center gap-8 
         "
-          >
-            <div className="space-y-3">
-              <h1
-                className="text-center font-semibold text-4xl
+            >
+              <div className="space-y-3">
+                <h1
+                  className="text-center font-semibold text-4xl
             tracking-tight sm:text-5xl bg-linear-to-r from-zinc-900 dark:from-white to-zinc-800 bg-clip-text text-transparent pb-1
             "
-              >
-                Design mobile & web apps <br className="md:hidden" />
-                <span className="text-primary">in minutes</span>
-              </h1>
-              <div className="mx-auto max-w-2xl ">
-                <p className="text-center font-normal text-foreground leading-relaxed sm:text-lg">
-                  Go from idea to beautiful mobile or web mockups in minutes by chatting
-                  with AI.
-                </p>
-              </div>
-            </div>
+                >
+                  Design mobile & web apps <br className="md:hidden" />
+                  <span className="text-primary">in minutes</span>
+                </h1>
 
-            <div
-              className="flex w-full max-w-3xl flex-col
+                <div className="mx-auto max-w-2xl ">
+                  <p className="text-center font-normal text-foreground leading-relaxed sm:text-lg">
+                    Go from idea to beautiful mobile or web mockups in minutes
+                    by chatting with AI.
+                  </p>
+                </div>
+              </div>
+
+              <div
+                className="flex w-full max-w-3xl flex-col
             item-center gap-8 relative 
             "
-            >
-              <div className="w-full">
-                <PromptInput
-                  className=""
-                  promptText={promptText}
-                  setPromptText={setPromptText}
-                  isLoading={isEnhancing || isPending}
-                  loadingText={isEnhancing ? "Enhancing..." : isPending ? "Designing..." : undefined}
-                  onSubmit={handleSubmit}
-                  selectedModel={selectedModel}
-                  onModelChange={handleModelChange}
-                />
-              </div>
+              >
+                <div className="w-full">
+                  <PromptInput
+                    className=""
+                    promptText={promptText}
+                    setPromptText={setPromptText}
+                    isLoading={isEnhancing || isPending}
+                    loadingText={
+                      isEnhancing
+                        ? "Enhancing..."
+                        : isPending
+                          ? "Designing..."
+                          : undefined
+                    }
+                    onSubmit={handleSubmit}
+                    selectedModel={selectedModel}
+                    onModelChange={handleModelChange}
+                  />
+                </div>
 
-              <div className="flex flex-wrap justify-center">
-                <Suggestions>
-                  {suggestions.map((s) => (
-                    <Suggestion
-                      key={s.label}
-                      suggestion={s.label}
-                      className="text-sm! h-7!   dark:bg-zinc-900 border border-zinc-900
+                <div className="flex flex-wrap justify-center">
+                  <Suggestions>
+                    {suggestions.map((s) => (
+                      <Suggestion
+                        key={s.label}
+                        suggestion={s.label}
+                        className="text-sm! h-7!   dark:bg-zinc-900 border border-zinc-900
                       "
-                      onClick={() => handleSuggestionClick(s.value)}
-                    >
-                      {s.icon}
-                      <span>{s.label}</span>
-                    </Suggestion>
-                  ))}
-                </Suggestions>
+                        onClick={() => handleSuggestionClick(s.value)}
+                      >
+                        {s.icon}
+                        <span>{s.label}</span>
+                      </Suggestion>
+                    ))}
+                  </Suggestions>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-
+        </BlurFade>
         <div className="w-full py-10 border-x border-zinc-900">
           <div className="mx-auto max-w-3xl">
             {userId && (

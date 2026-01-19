@@ -1,5 +1,3 @@
-
-
 import { ReactElement } from "react";
 import PerformanceChart from "./atoms/PerformanceChart";
 
@@ -153,6 +151,7 @@ export default function FeaturesBento() {
           {/* Card 4 */}
           <FeatureCard>
             <IntegrationMock />
+            {/* <OrbitingCircles /> */}
             <h3 className="mt-6 text-lg font-semibold text-neutral-900 dark:text-neutral-100">
               Seamless Integrations
             </h3>
