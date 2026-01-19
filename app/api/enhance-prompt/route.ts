@@ -86,7 +86,7 @@ The enhanced prompt should:
 
 **Output**: "Premium fitness tracking app for health-conscious professionals who value data-driven progress. Design a complete mobile experience with: elegant onboarding (3 screens introducing key features with aspirational imagery), authentication (login/signup with social options), home dashboard showing today's metrics with clear data visualization (steps, calories, active minutes as the hero element), workout library with smart categories and search, detailed workout view with exercise cards and rest timers, progress analytics with weekly/monthly charts that celebrate milestones, profile with achievements and personal records, and minimal settings.
 
-Visual Direction: Clean, confident, and motivating. Think Apple Fitness meets Strava - professional but not cold, data-rich but not overwhelming. 
+Visual Direction: Clean, confident, and motivating. Think Apple Fitness meets Strava - professional but not cold, data-rich but not overwhelming.
 
 Color Strategy (60-30-10): 60% off-white/light gray backgrounds for breathing room, 30% white cards with subtle shadows for content containers, 10% single bold accent (deep coral or electric blue) for CTAs and progress indicators only. NO gradients on backgrounds. NO neon colors. NO purple-pink combinations.
 
@@ -119,7 +119,7 @@ export async function POST(request: Request) {
       model: openrouter.chat(selectedModel),
       system: ENHANCEMENT_SYSTEM_PROMPT,
       prompt: `Enhance this design prompt with your expertise as a senior UI/UX designer:\n\n${prompt}`,
-      temperature: 0.7, // Some creativity but still focused
+      temperature: 0.5, // Some creativity but still focused
     });
 
     return NextResponse.json({
