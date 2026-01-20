@@ -39,15 +39,17 @@ const Footer: React.FC = () => {
 
   return (
     <footer className="relative bg-linear-to-b from-black to-zinc-950 overflow-hidden border border-zinc-900">
-
-
       <div className="container mx-auto px-6 md:px-12 lg:px-20 pt-16 pb-8">
         {/* Footer Content */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 mb-16">
           {/* Logo Section */}
           <div className="sm:col-span-2 lg:col-span-1 flex items-start">
-            <div className="bg-zinc-900 p-3 rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300">
-              <svg
+            <div
+              className="bg-zinc-950 size-12 p-3 flex items-center justify-center
+             shadow-lg hover:shadow-xl transition-shadow duration-300 border"
+            >
+              <p className="font-bold p-1 text-white text-2xl">G</p>
+              {/* <svg
                 className="w-8 h-8 text-white"
                 viewBox="0 0 24 24"
                 fill="none"
@@ -59,7 +61,7 @@ const Footer: React.FC = () => {
                 <circle cx="15.5" cy="8.5" r="1.5" fill="currentColor" />
                 <circle cx="8.5" cy="15.5" r="1.5" fill="currentColor" />
                 <circle cx="15.5" cy="15.5" r="1.5" fill="currentColor" />
-              </svg>
+              </svg> */}
             </div>
           </div>
 
