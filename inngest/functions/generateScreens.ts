@@ -260,7 +260,7 @@ export const generateScreens = inngest.createFunction(
         - Use clean, minimal design with generous whitespace (professional spacing)
         - Modern, purposeful aesthetics - subtle gradients only when meaningful
         - Clear visual hierarchy - primary actions prominent, secondary actions subtle
-        - Use modern Lucide icons exclusively (outline style preferred)
+        - Use modern Hugeicons stroke icons exclusively (free version) - via <iconify-icon icon="hugeicons:NAME"></iconify-icon>
         - Ensure minimum 44x44px touch targets for all interactive elements
 
         1. **Generate ONLY raw HTML markup for this mobile app screen using Tailwind CSS.**

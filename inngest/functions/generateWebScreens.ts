@@ -266,7 +266,7 @@ export const generateWebScreens = inngest.createFunction(
         - Generous whitespace and professional spacing (16px, 24px, 32px, 48px scale)
         - Modern, clean aesthetics - subtle shadows, purposeful gradients
         - Clear visual hierarchy - primary content prominent, secondary content subtle
-        - Use modern Lucide icons exclusively
+        - Use modern Hugeicons stroke icons exclusively (free version) - via <iconify-icon icon="hugeicons:NAME"></iconify-icon>
         - Ensure proper hover states for all interactive elements
 
         1. **Generate ONLY raw HTML markup for this web application screen using Tailwind CSS.**
