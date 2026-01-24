@@ -369,6 +369,7 @@ import { BlurFade } from "@/components/ui/blur-fade";
 import TrustedBy from "@/components/landing/atoms/TrustedBy";
 import FooterDemo from "@/components/landing/Footer";
 import ExploreTemplates from "@/components/landing/ExploreTemplates";
+
 const inter = Inter_Tight({ subsets: ["latin"] });
 
 import { DeviceType } from "@/components/prompt-input";
@@ -527,28 +528,28 @@ const LandingSection = () => {
         <Header />
         <BlurFade>
           <div
-            className={`relative overflow-hidden py-28 border border-zinc-900
+            className={`relative  overflow-hidden py-28 border border-zinc-900
            ${inter.className}`}
           >
             <div className="absolute inset-0 z-[-1]"></div>
             <div
               className="max-w-6xl mx-auto flex flex-col
-         items-center justify-center gap-8 
+         items-center justify-center gap-8  
         "
             >
               <div className="space-y-3">
+                <div className="mx-auto text-center">5.0 rating . 110+ reviews</div>
                 <h1
                   className="text-center font-semibold text-4xl
             tracking-tight sm:text-5xl bg-linear-to-r from-zinc-900 dark:from-white to-zinc-800 bg-clip-text text-transparent pb-1
             "
                 >
-                  Design apps & creatives <br className="md:hidden" />
-                  <span className="text-primary">in minutes</span>
+                  Design your entire digital  <br className="" />product with one prompt.
+                  {/* <span className="text-primary">in minutes</span> */}
                 </h1>
-                <div className="mx-auto max-w-2xl ">
+                <div className="mx-auto max-w-md ">
                   <p className="text-center font-normal text-foreground leading-relaxed sm:text-lg">
-                    Go from idea to beautiful mobile, web, or App Store designs
-                    in minutes by chatting with AI.
+                    Generate complete screens, user flows, and layouts automatically — from idea to polished UI.
                   </p>
                 </div>
               </div>
@@ -574,7 +575,7 @@ const LandingSection = () => {
                 </div>
 
                 <div className="flex flex-wrap justify-center">
-                  <Suggestions>
+                  {/* <Suggestions>
                     {suggestions.map((s) => (
                       <Suggestion
                         key={s.label}
@@ -587,7 +588,7 @@ const LandingSection = () => {
                         <span>{s.label}</span>
                       </Suggestion>
                     ))}
-                  </Suggestions>
+                  </Suggestions> */}
                 </div>
               </div>
             </div>
