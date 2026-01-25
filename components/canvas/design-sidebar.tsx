@@ -32,34 +32,15 @@ interface DesignSidebarProps {
 
 type DesignTab = "chat" | "theme" | "fonts";
 
-// Shimmer Card Component with cool animation (only for currently generating frame)
+// Shimmer Card Component (only for currently generating frame)
 function ShimmerCard({ title }: { title: string }) {
   return (
-    <div className="relative overflow-hidden rounded-lg border border-neutral-200 dark:border-[#2b2b2b] bg-white dark:bg-[#1f1f1f] p-3 animate-in fade-in slide-in-from-bottom-2 duration-300">
-      <div className="flex items-center gap-2 mb-2">
-        <div className="relative w-8 h-8 rounded bg-gradient-to-br from-purple-500/20 to-blue-500/20 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent" style={{ animation: "shimmer 2s ease-in-out infinite" }} />
-        </div>
-        <div className="flex-1 space-y-1.5">
-          <div className="h-3 w-24 rounded bg-gradient-to-r from-neutral-200 via-neutral-300 to-neutral-200 dark:from-neutral-700 dark:via-neutral-600 dark:to-neutral-700 overflow-hidden relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent" style={{ animation: "shimmer 2s ease-in-out infinite" }} />
-          </div>
-        </div>
-      </div>
+    <div className="rounded-lg border border-neutral-200 dark:border-[#2b2b2b] bg-white dark:bg-[#1f1f1f] p-3">
       <div className="space-y-2">
-        <div className="h-2 w-full rounded bg-gradient-to-r from-neutral-200 via-neutral-300 to-neutral-200 dark:from-neutral-700 dark:via-neutral-600 dark:to-neutral-700 overflow-hidden relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent" style={{ animation: "shimmer 2s ease-in-out infinite" }} />
-        </div>
-        <div className="h-2 w-3/4 rounded bg-gradient-to-r from-neutral-200 via-neutral-300 to-neutral-200 dark:from-neutral-700 dark:via-neutral-600 dark:to-neutral-700 overflow-hidden relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent" style={{ animation: "shimmer 2s ease-in-out infinite", animationDelay: "0.2s" }} />
-        </div>
-        <div className="h-2 w-5/6 rounded bg-gradient-to-r from-neutral-200 via-neutral-300 to-neutral-200 dark:from-neutral-700 dark:via-neutral-600 dark:to-neutral-700 overflow-hidden relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent" style={{ animation: "shimmer 2s ease-in-out infinite", animationDelay: "0.4s" }} />
-        </div>
-      </div>
-      <div className="mt-2 flex items-center gap-1.5 text-xs text-purple-600 dark:text-purple-400">
-        <Sparkles className="w-3 h-3 animate-pulse" />
-        <span className="font-medium">Generating {title}...</span>
+        <div className="h-3 w-24 rounded bg-neutral-200 dark:bg-neutral-700 animate-pulse" />
+        <div className="h-2 w-full rounded bg-neutral-200 dark:bg-neutral-700 animate-pulse" />
+        <div className="h-2 w-3/4 rounded bg-neutral-200 dark:bg-neutral-700 animate-pulse" />
+        <div className="h-2 w-5/6 rounded bg-neutral-200 dark:bg-neutral-700 animate-pulse" />
       </div>
     </div>
   );
