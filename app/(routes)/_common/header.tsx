@@ -38,7 +38,11 @@ const Header = () => {
          flex items-center justify-between"
         >
           <Logo />
-
+          <div className="flex gap-2 items-center">
+            <p>Dashboard</p>
+            <p>Explore</p>
+            <p>Pricing</p>
+          </div>
           <div
             className="flex flex-1 items-center
            justify-end gap-3
@@ -78,10 +82,10 @@ const Header = () => {
                     <AvatarFallback className="rounded-lg">
                       {displayName
                         ? displayName
-                            .split(" ")
-                            .map((n) => n.charAt(0))
-                            .join("")
-                            .slice(0, 2)
+                          .split(" ")
+                          .map((n) => n.charAt(0))
+                          .join("")
+                          .slice(0, 2)
                         : `${user?.given_name?.charAt(0) || ""}${user?.family_name?.charAt(0) || ""}`}
                     </AvatarFallback>
                   </Avatar>
@@ -99,7 +103,7 @@ const Header = () => {
               </DropdownMenu>
             ) : (
               <LoginLink>
-                <Button>Sign in</Button>
+                <Button className="rounded-full">Get Started</Button>
               </LoginLink>
             )}
           </div>
