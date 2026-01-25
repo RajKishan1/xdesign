@@ -654,7 +654,7 @@ const LandingSection = () => {
 
       {/* <FeaturesBento /> */}
       <ExploreTemplates />
-      <PricingPage />
+      {/* <PricingPage /> */}
       <HowItWorks />
       <Faq />
       <FooterDemo />
