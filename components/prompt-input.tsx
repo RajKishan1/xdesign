@@ -7,7 +7,13 @@ import {
   InputGroupButton,
   InputGroupTextarea,
 } from "./ui/input-group";
-import { CornerDownLeftIcon, ChevronDownIcon, Smartphone, Globe } from "lucide-react";
+import {
+  CornerDownLeftIcon,
+  ChevronDownIcon,
+  Smartphone,
+  Globe,
+  Sparkles,
+} from "lucide-react";
 import { Spinner } from "./ui/spinner";
 import {
   DropdownMenu,
@@ -57,18 +63,18 @@ const PromptInput = ({
 
   const selectedModelName = getModelName(selectedModel);
   const selectedModelProvider = AI_MODELS.find(
-    (m) => m.id === selectedModel
+    (m) => m.id === selectedModel,
   )?.provider;
 
   return (
-    <div className="bg-zinc-950/10">
+    <div className="max-w-187.5 mx-auto">
       <InputGroup
         className={cn(
-          "min-h-50  bg-zinc-950 ",
-          className && className
+          "min-h-50 bg-[#ffffff] dark:bg-zinc-950 p-3 ",
+          className && className,
         )}
       >
-        <InputGroupAddon
+        {/* <InputGroupAddon
           align="block-start"
           className="flex bg-zinc-800 items-center justify-between w-full px-3 pt-3 pb-2"
         >
@@ -109,7 +115,7 @@ const PromptInput = ({
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-        </InputGroupAddon>
+        </InputGroupAddon> */}
 
         <InputGroupTextarea
           className="text-base! py-2.5! "
@@ -125,7 +131,7 @@ const PromptInput = ({
           className="flex items-center justify-between"
         >
           {/* Device Type Toggle */}
-          <div className="flex items-center bg-zinc-100 dark:bg-zinc-800 rounded-lg p-0.5">
+          <div className="flex items-center bg-zinc-100 dark:bg-zinc-800 rounded-lg p-1">
             <button
               type="button"
               onClick={() => onDeviceTypeChange?.("mobile")}
@@ -133,7 +139,7 @@ const PromptInput = ({
                 "flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-all",
                 deviceType === "mobile"
                   ? "bg-white dark:bg-zinc-700 text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               <Smartphone className="size-4" />
@@ -146,7 +152,7 @@ const PromptInput = ({
                 "flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-all",
                 deviceType === "web"
                   ? "bg-white dark:bg-zinc-700 text-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               <Globe className="size-4" />
@@ -157,7 +163,7 @@ const PromptInput = ({
           {!hideSubmitBtn && (
             <InputGroupButton
               variant="default"
-              className=""
+              className="rounded-full"
               size="sm"
               disabled={!promptText?.trim() || isLoading}
               onClick={() => onSubmit?.()}
@@ -168,10 +174,10 @@ const PromptInput = ({
                   {loadingText && <span className="ml-2">{loadingText}</span>}
                 </>
               ) : (
-                <>
+                <div className="px-1 flex gap-1.5 items-center">
                   Design
-                  <CornerDownLeftIcon className="size-4" />
-                </>
+                  <Sparkles />
+                </div>
               )}
             </InputGroupButton>
           )}

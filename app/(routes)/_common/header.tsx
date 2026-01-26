@@ -32,13 +32,13 @@ const Header = () => {
     "";
   return (
     <div className="sticky top-0 right-0 left-0 z-30  ">
-      <header className="h-16 border-x border-zinc-900 px-6  py-4 bg-zinc-200 dark:bg-black">
+      <header className=" border-x border-zinc-50 dark:border-zinc-900 px-6  p-6 bg-white dark:bg-black">
         <div
           className="w-full max-w-6xl mx-auto
          flex items-center justify-between"
         >
           <Logo />
-          <div className="flex gap-2 items-center">
+          <div className="flex gap-6 items-center hover:cursor-pointer">
             <p>Dashboard</p>
             <p>Explore</p>
             <p>Pricing</p>
@@ -58,13 +58,13 @@ const Header = () => {
               <SunIcon
                 className={cn(
                   "absolute h-5 w-5 transition",
-                  isDark ? "scale-100" : "scale-0"
+                  isDark ? "scale-100" : "scale-0",
                 )}
               />
               <MoonIcon
                 className={cn(
                   "absolute h-5 w-5 transition",
-                  isDark ? "scale-0" : "scale-100"
+                  isDark ? "scale-0" : "scale-100",
                 )}
               />
             </Button>
@@ -82,10 +82,10 @@ const Header = () => {
                     <AvatarFallback className="rounded-lg">
                       {displayName
                         ? displayName
-                          .split(" ")
-                          .map((n) => n.charAt(0))
-                          .join("")
-                          .slice(0, 2)
+                            .split(" ")
+                            .map((n) => n.charAt(0))
+                            .join("")
+                            .slice(0, 2)
                         : `${user?.given_name?.charAt(0) || ""}${user?.family_name?.charAt(0) || ""}`}
                     </AvatarFallback>
                   </Avatar>

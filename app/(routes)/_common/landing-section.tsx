@@ -531,7 +531,7 @@ const LandingSection = () => {
         <Header />
         <BlurFade>
           <div
-            className={`relative  overflow-hidden py-28 border border-zinc-900
+            className={`relative  overflow-hidden py-28 border border-zinc-50 dark:border-zinc-900
            ${inter.className}`}
           >
             <div className="absolute inset-0 z-[-1]"></div>
@@ -545,9 +545,8 @@ const LandingSection = () => {
                   5.0 rating . 110+ reviews
                 </div>
                 <h1
-                  className="text-center font-semibold text-4xl
-            tracking-tight sm:text-5xl bg-linear-to-r from-zinc-900 dark:from-white to-zinc-800 bg-clip-text text-transparent pb-1
-            "
+                  className="text-center font-semibold  text-5xl
+            tracking-tight  bg-black dark:bg-linear-to-r dark:from-white dark:to-zinc-900 bg-clip-text text-transparent pb-1 "
                 >
                   Design your entire digital <br className="" />
                   product with one prompt.
@@ -563,10 +562,9 @@ const LandingSection = () => {
 
               <div
                 className="flex w-full max-w-3xl flex-col
-            item-center gap-8 relative 
-            "
+            item-center gap-8 relative "
               >
-                <div className="w-full">
+                <div className="w-full mt-12">
                   <PromptInput
                     className=""
                     promptText={promptText}
