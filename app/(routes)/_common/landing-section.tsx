@@ -373,6 +373,8 @@ import ExploreTemplates from "@/components/landing/ExploreTemplates";
 const inter = Inter_Tight({ subsets: ["latin"] });
 
 import { DeviceType } from "@/components/prompt-input";
+import WorkingWithGimble from "@/components/landing/WorkingWithGimble";
+import LatestPost from "@/components/landing/LatestPost";
 
 // Loading state type for the design process
 type LoadingState = "idle" | "enhancing" | "designing";
@@ -538,18 +540,22 @@ const LandingSection = () => {
         "
             >
               <div className="space-y-3">
-                <div className="mx-auto text-center">5.0 rating . 110+ reviews</div>
+                <div className="mx-auto text-center">
+                  5.0 rating . 110+ reviews
+                </div>
                 <h1
                   className="text-center font-semibold text-4xl
             tracking-tight sm:text-5xl bg-linear-to-r from-zinc-900 dark:from-white to-zinc-800 bg-clip-text text-transparent pb-1
             "
                 >
-                  Design your entire digital  <br className="" />product with one prompt.
+                  Design your entire digital <br className="" />
+                  product with one prompt.
                   {/* <span className="text-primary">in minutes</span> */}
                 </h1>
                 <div className="mx-auto max-w-md ">
                   <p className="text-center font-normal text-foreground leading-relaxed sm:text-lg">
-                    Generate complete screens, user flows, and layouts automatically — from idea to polished UI.
+                    Generate complete screens, user flows, and layouts
+                    automatically — from idea to polished UI.
                   </p>
                 </div>
               </div>
@@ -651,11 +657,12 @@ const LandingSection = () => {
           </div>
         </div>
       </div>
-
+      <WorkingWithGimble />
       {/* <FeaturesBento /> */}
       <ExploreTemplates />
-      {/* <PricingPage /> */}
+      <PricingPage />
       <HowItWorks />
+      <LatestPost />
       <Faq />
       <FooterDemo />
     </div>

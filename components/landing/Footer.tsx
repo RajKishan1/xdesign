@@ -1,140 +1,165 @@
+"use client";
 import React from "react";
+import { Facebook, Instagram, Linkedin, Youtube } from "lucide-react";
 
-interface FooterLink {
-  label: string;
-  href: string;
-}
+const Footer = () => {
+  const [isDark, setIsDark] = React.useState(false);
 
-interface FooterSection {
-  title: string;
-  links: FooterLink[];
-}
-
-const Footer: React.FC = () => {
-  const footerSections: FooterSection[] = [
+  const footerLinks = [
     {
-      title: "The Good",
+      title: "Company",
       links: [
-        { label: "Home", href: "#" },
-        { label: "Manifesto", href: "#" },
-        { label: "Research", href: "#" },
-        { label: "Careers", href: "#" },
+        { name: "Homepage", href: "#" },
+        { name: "Solution", href: "#" },
+        { name: "About", href: "#" },
+        { name: "Contact", href: "#" },
       ],
     },
     {
-      title: "The Boring",
+      title: "Company",
       links: [
-        { label: "Terms of Use", href: "#" },
-        { label: "Play by the Rules", href: "#" },
+        { name: "Blog", href: "#" },
+        { name: "Blog Details", href: "#" },
+        { name: "Review", href: "#" },
+        { name: "FAQ", href: "#" },
       ],
     },
     {
-      title: "The Cool",
+      title: "Company",
       links: [
-        { label: "X", href: "#" },
-        { label: "Instagram", href: "#" },
+        { name: "Careers", href: "#" },
+        { name: "Pricing", href: "#" },
+        { name: "Request", href: "#" },
+        { name: "404", href: "#" },
       ],
     },
   ];
 
+  const XIcon = () => (
+    <svg
+      viewBox="0 0 24 24"
+      fill="currentColor"
+      className="h-5 w-5"
+      aria-hidden="true"
+    >
+      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+    </svg>
+  );
+
   return (
-    <footer className="relative bg-linear-to-b from-black to-zinc-950 overflow-hidden border border-zinc-900">
-      <div className="container mx-auto px-6 md:px-12 lg:px-20 pt-16 pb-8">
-        {/* Footer Content */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-12 mb-16">
-          {/* Logo Section */}
-          <div className="sm:col-span-2 lg:col-span-1 flex items-start">
-            <div
-              className="bg-zinc-950 size-12 p-3 flex items-center justify-center
-             shadow-lg hover:shadow-xl transition-shadow duration-300 border"
-            >
-              <p className="font-bold p-1 text-white text-2xl">G</p>
-              {/* <svg
-                className="w-8 h-8 text-white"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <rect x="3" y="3" width="18" height="18" rx="2" />
-                <circle cx="8.5" cy="8.5" r="1.5" fill="currentColor" />
-                <circle cx="15.5" cy="8.5" r="1.5" fill="currentColor" />
-                <circle cx="8.5" cy="15.5" r="1.5" fill="currentColor" />
-                <circle cx="15.5" cy="15.5" r="1.5" fill="currentColor" />
-              </svg> */}
+    <div className={isDark ? "dark" : ""}>
+      <footer className="border-t border-gray-200 bg-gray-50 dark:border-zinc-900 dark:bg-black">
+    
+
+        <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+          <div className="grid gap-8 lg:grid-cols-[2fr_1fr_1fr_1fr]">
+            {/* Brand Section */}
+            <div className="space-y-6">
+              {/* Logo */}
+              <div className="flex items-center gap-2">
+                <div className="relative h-12 w-12 overflow-hidden rounded-lg bg-gradient-to-br from-gray-300 to-gray-200 dark:from-gray-700 dark:to-gray-800">
+                  <div className="absolute left-1/2 top-1/2 h-8 w-8 -translate-x-1/2 -translate-y-1/2">
+                    <div className="absolute left-0 top-0 h-4 w-4 bg-yellow-400"></div>
+                    <div className="absolute right-0 top-0 h-4 w-4 bg-red-500"></div>
+                    <div className="absolute bottom-0 left-0 h-4 w-4 bg-green-600"></div>
+                    <div className="absolute bottom-0 right-0 h-4 w-4 bg-blue-600"></div>
+                    <div className="absolute left-1/2 top-1/2 h-6 w-6 -translate-x-1/2 -translate-y-1/2 rounded-sm bg-gray-50 dark:bg-gray-900"></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Tagline */}
+              <p className="max-w-xs text-sm leading-relaxed text-gray-600 dark:text-gray-400">
+                AI-powered tools for business growth, seamless scaling, and
+                proven results.
+              </p>
+
+              {/* Social Icons */}
+              <div className="flex items-center gap-3">
+                <a
+                  href="#"
+                  className="flex h-9 w-9 items-center justify-center rounded-lg bg-gray-200 text-gray-600 transition-colors hover:bg-gray-300 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
+                  aria-label="Facebook"
+                >
+                  <Facebook className="h-4 w-4" />
+                </a>
+                <a
+                  href="#"
+                  className="flex h-9 w-9 items-center justify-center rounded-lg bg-gray-200 text-gray-600 transition-colors hover:bg-gray-300 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
+                  aria-label="Instagram"
+                >
+                  <Instagram className="h-4 w-4" />
+                </a>
+                <a
+                  href="#"
+                  className="flex h-9 w-9 items-center justify-center rounded-lg bg-gray-200 text-gray-600 transition-colors hover:bg-gray-300 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
+                  aria-label="LinkedIn"
+                >
+                  <Linkedin className="h-4 w-4" />
+                </a>
+                <a
+                  href="#"
+                  className="flex h-9 w-9 items-center justify-center rounded-lg bg-gray-200 text-gray-600 transition-colors hover:bg-gray-300 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
+                  aria-label="X (Twitter)"
+                >
+                  <XIcon />
+                </a>
+                <a
+                  href="#"
+                  className="flex h-9 w-9 items-center justify-center rounded-lg bg-gray-200 text-gray-600 transition-colors hover:bg-gray-300 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700"
+                  aria-label="YouTube"
+                >
+                  <Youtube className="h-4 w-4" />
+                </a>
+              </div>
             </div>
+
+            {/* Navigation Columns */}
+            {footerLinks.map((column, index) => (
+              <div key={index}>
+                <h3 className="mb-4 text-sm font-semibold text-gray-900 dark:text-white">
+                  {column.title}
+                </h3>
+                <ul className="space-y-3">
+                  {column.links.map((link, linkIndex) => (
+                    <li key={linkIndex}>
+                      <a
+                        href={link.href}
+                        className="text-sm text-gray-600 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+                      >
+                        {link.name}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
 
-          {/* Footer Links Sections */}
-          {footerSections.map((section, index) => (
-            <div key={index} className="space-y-4">
-              <h3 className="text-zinc-50 font-semibold text-base md:text-lg">
-                {section.title}
-              </h3>
-              <ul className="space-y-1.5">
-                {section.links.map((link, linkIndex) => (
-                  <li key={linkIndex}>
-                    <a
-                      href={link.href}
-                      className="text-zinc-300 hover:text-zinc-100 text-sm md:text-base transition-colors duration-200 inline-block hover:translate-x-1 transform"
-                    >
-                      {link.label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-
-        {/* Large Brand Text */}
-        <div className="relative overflow-hidden py-8 ">
-          <h2 className="text-7xl sm:text-8xl md:text-9xl lg:text-[12rem] xl:text-[14rem] font-black text-white leading-none tracking-tight text-center">
-            Gimble
-          </h2>
-
-          <div className="absolute inset-0 bg-linear-to-t from-black via-transparent to-transparent pointer-events-none" />
-        </div>
-
-        {/* Bottom Copyright Section */}
-        <div className="border-t border-gray-300 pt-8 mt-8">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <p className="text-gray-600 text-sm">
-              © {new Date().getFullYear()} Gimble. All rights reserved.
+          {/* Bottom Bar */}
+          <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-gray-200 pt-8 dark:border-gray-800 sm:flex-row">
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              Copyright © 2024 Gimble. All rights reserved
             </p>
             <div className="flex items-center gap-6">
               <a
                 href="#"
-                className="text-gray-600 hover:text-gray-900 text-sm transition-colors duration-200"
+                className="text-sm text-gray-600 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
               >
                 Privacy Policy
               </a>
               <a
                 href="#"
-                className="text-gray-600 hover:text-gray-900 text-sm transition-colors duration-200"
+                className="text-sm text-gray-600 transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
               >
-                Cookie Policy
+                Terms & Conditions
               </a>
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Decorative Elements */}
-      {/* <div className="absolute bottom-20 right-10 w-32 h-32 bg-cyan-200 rounded-full blur-3xl opacity-20 pointer-events-none" />
-      <div className="absolute top-40 left-10 w-40 h-40 bg-red-200 rounded-full blur-3xl opacity-20 pointer-events-none" /> */}
-    </footer>
-  );
-};
-
-const FooterDemo: React.FC = () => {
-  return (
-    <div className="min-h-36 bg-black">
-      <div className="h-auto"></div>
-
-      <Footer />
+      </footer>
     </div>
   );
 };
 
-export default FooterDemo;
+export default Footer;

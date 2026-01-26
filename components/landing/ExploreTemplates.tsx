@@ -31,7 +31,7 @@ const TemplateData = [
 ]
 
 export const TemplateCards = ({ imgUrl, title, text }: Props) => {
-  return <div className="w-96 h-129 bg-red-900">
+  return <div className="w-96 h-129 bg-zinc-50">
     <img src={imgUrl} alt="" />
     <h2>{title}</h2>
     <p>{text}</p>
