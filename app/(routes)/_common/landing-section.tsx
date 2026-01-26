@@ -375,6 +375,7 @@ const inter = Inter_Tight({ subsets: ["latin"] });
 import { DeviceType } from "@/components/prompt-input";
 import WorkingWithGimble from "@/components/landing/WorkingWithGimble";
 import LatestPost from "@/components/landing/LatestPost";
+import UsersFeedback from "@/components/landing/UsersFeedback";
 
 // Loading state type for the design process
 type LoadingState = "idle" | "enhancing" | "designing";
@@ -663,6 +664,7 @@ const LandingSection = () => {
       <PricingPage />
       <HowItWorks />
       <LatestPost />
+      <UsersFeedback />
       <Faq />
       <FooterDemo />
     </div>
