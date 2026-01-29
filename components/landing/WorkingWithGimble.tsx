@@ -48,7 +48,7 @@ import {
   useTransform,
   useAnimationFrame,
 } from "framer-motion";
-import { Check } from "lucide-react";
+import { Check, Wand } from "lucide-react";
 
 const textItems = [
   "Write a single prompt",
@@ -101,7 +101,7 @@ const ListItem = ({
 
         opacity,
       }}
-      className="flex h-20  items-center justify-center text-sm font-medium text-gray-700"
+      className="flex h-28  items-center justify-baseline text-sm font-medium text-gray-700 dark:text-white"
     >
       <span className="h-5 w-5 rounded-full bg-purple-500 flex items-center justify-center text-white p-1">
         <Check />
@@ -119,19 +119,23 @@ const WorkingWithGimble = () => {
   });
 
   return (
-    <div className="flex py-40 w-full items-center justify-center bg-gray-50 p-8">
+    <div className="flex py-40 w-full items-center justify-center bg-[#f9f9f9] dark:bg-black p-8">
       <div className="text-center w-full flex items-center">
-        <h2 className="mb-8 text-3xl font-bold text-gray-900">
-          Working with Gimble
-        </h2>
-
+        <div className="flex items-center justify-center gap-2.5 mx-auto">
+          <span className="rounded-full p-2.5 bg-white">
+            <Wand />
+          </span>{" "}
+          <h2 className=" text-3xl font-medium text-gray-900 dark:text-white">
+            Working with Gimble
+          </h2>
+        </div>
         <div
           className="relative mx-auto h-80 w-full max-w-md overflow-hidden "
           style={{ perspective: "500px" }}
         >
           {/* Fade masks */}
-          <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-20 bg-linear-to-b from-gray-50 to-transparent" />
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-20 bg-linear-to-t from-gray-50 to-transparent" />
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-20 bg-linear-to-b from-gray-50 dark:from-black to-transparent" />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 h-20 bg-linear-to-t from-gray-50 dark:from-black to-transparent" />
 
           {[...textItems, ...textItems].map((text, index) => (
             <ListItem key={index} text={text} index={index} baseY={baseY} />
