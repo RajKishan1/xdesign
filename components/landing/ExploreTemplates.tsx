@@ -1,4 +1,3 @@
-import { Item } from "@radix-ui/react-dropdown-menu";
 import React from "react";
 interface Props {
   imgUrl: string,
@@ -45,7 +44,7 @@ const ExploreTemplates = () => {
         <h1 className="text-[40px] text-center">Explore Templates</h1>
         <p>Customise beautiful pre-built design Templates</p>
       </div>
-      <div className="flex block">
+      <div className="flex ">
         {TemplateData.map((item, index) => (
           <TemplateCards
             key={index}

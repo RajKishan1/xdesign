@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Jost } from "next/font/google";
 import "./globals.css";
+import { openSauceSans } from "./fonts";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "@/components/ui/sonner";
 import { QueryProvider } from "@/context/query-provider";
@@ -20,7 +21,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className={openSauceSans.variable}>
       <body className={`${jostSans.className} antialiased bg-[#f9f9f9] dark:bg-black`}>
         <QueryProvider>
           <ThemeProvider

@@ -656,9 +656,10 @@ const LandingSection = () => {
           </div>
         </div>
       </div>
+      <ExploreTemplates />
       <WorkingWithGimble />
       {/* <FeaturesBento /> */}
-      <ExploreTemplates />
+
       <PricingPage />
       <HowItWorks />
       <LatestPost />

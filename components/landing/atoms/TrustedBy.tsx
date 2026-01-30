@@ -28,8 +28,7 @@ const TrustedBy: React.FC = () => {
         transition={{ delay: 0.4, ...BASE_TRANSITION }}
         className="text-primary text-sm leading-[22px] tracking-tight text-center py-6"
       >
-        Trusted by 25,000+ Aspiring & Working Data Engineers From Top
-        Companies{" "}
+      
       </motion.p>
       <div className="border-b border-grid" />
       <motion.div
