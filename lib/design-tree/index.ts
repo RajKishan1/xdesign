@@ -1,25 +1,25 @@
 /**
  * Design Tree Module
- * 
+ *
  * This module provides the foundation for a layer-based design system.
  * It enables:
- * 
+ *
  * 1. Structured design data (not just HTML strings)
  * 2. Click-to-select any element
  * 3. Edit individual elements (text, colors, spacing)
  * 4. Export to Figma as editable layers (via SVG)
- * 
+ *
  * Architecture:
- * 
+ *
  *   AI Generation → Design Tree → HTML Renderer → Canvas Display
  *                       ↓
  *                  Figma Export (SVG)
- * 
+ *
  * The Design Tree is the "source of truth" for all design data.
  */
 
 // Types
-export * from '@/types/design-tree';
+export * from "@/types/design-tree";
 
 // Zod Schemas for validation
 export {
@@ -40,23 +40,23 @@ export {
   validateDesignNode,
   parseDesignTree,
   safeParseDesignTree,
-} from './schema';
+} from "./schema";
 
 // HTML to Tree Parser
-export { 
+export {
   parseHtmlToDesignTree,
   parseElement,
   determineNodeType,
-} from './html-to-tree';
+} from "./html-to-tree";
 
-// Tree to HTML Renderer  
+// Tree to HTML Renderer
 export {
   renderDesignTreeToHtml,
   renderNode,
   buildBaseStyles,
   buildLayoutStyles,
   buildTextStyles,
-} from './tree-to-html';
+} from "./tree-to-html";
 
 // Tree to Figma Export (JSON format - for Figma plugin import)
 // NOTE: All container elements (frame, group, button, etc.) are now converted
@@ -69,11 +69,9 @@ export {
   parseColorToFigma,
   downloadFigmaPluginJson,
   setThemeColors,
-} from './tree-to-figma';
-export type { FigmaExportOptions } from './tree-to-figma';
+  collectImageUrlsFromTree,
+} from "./tree-to-figma";
+export type { FigmaExportOptions } from "./tree-to-figma";
 
 // Tree to SVG Export (BEST for Figma clipboard paste)
-export {
-  copyDesignTreeAsSvg,
-  convertTreeToSvg,
-} from './tree-to-svg';
+export { copyDesignTreeAsSvg, convertTreeToSvg } from "./tree-to-svg";

@@ -14,7 +14,11 @@ import ElementHoverOverlay from "./element-hover-overlay";
 import { toast } from "sonner";
 import DeviceFrameSkeleton from "./device-frame-skeleton";
 import { useRegenerateFrame, useDeleteFrame } from "@/features/use-frame";
-import { copyDesignToFigma } from "@/lib/figma-export";
+import {
+  parseHtmlToDesignTree,
+  copyDesignTreeAsSvg,
+  collectImageUrlsFromTree,
+} from "@/lib/design-tree";
 
 type PropsType = {
   html: string;
@@ -44,15 +48,16 @@ const DeviceFrame = ({
   projectId,
   onOpenHtmlDialog,
 }: PropsType) => {
-  const { selectedFrameId, setSelectedFrameId, updateFrame, deviceType } = useCanvas();
-  const { 
-    mode, 
-    updateScreenPosition, 
-    linkingState, 
+  const { selectedFrameId, setSelectedFrameId, updateFrame, deviceType } =
+    useCanvas();
+  const {
+    mode,
+    updateScreenPosition,
+    linkingState,
     finishLinking,
     cancelLinking,
   } = usePrototype();
-  
+
   // Device dimensions based on type
   // Both web and mobile have dynamic (auto) height
   const getDeviceDimensions = () => {
@@ -61,14 +66,18 @@ const DeviceFrame = ({
     }
     return { width: 430, height: null, minHeight: 932 }; // mobile - height is dynamic
   };
-  const { width: DEVICE_WIDTH, height: DEVICE_HEIGHT, minHeight: DEVICE_MIN_HEIGHT } = getDeviceDimensions();
+  const {
+    width: DEVICE_WIDTH,
+    height: DEVICE_HEIGHT,
+    minHeight: DEVICE_MIN_HEIGHT,
+  } = getDeviceDimensions();
   const isFlexibleHeight = true; // Both web and mobile have flexible height
-  
+
   const [frameSize, setFrameSize] = useState({
     width: DEVICE_WIDTH,
     height: DEVICE_HEIGHT || DEVICE_MIN_HEIGHT,
   });
-  
+
   // Track actual content height for both web and mobile designs
   const [contentHeight, setContentHeight] = useState<number>(DEVICE_MIN_HEIGHT);
   const [framePosition, setFramePosition] = useState(initialPosition);
@@ -82,7 +91,7 @@ const DeviceFrame = ({
   const rndRef = useRef<Rnd>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  
+
   const { font } = useCanvas();
   const isSelected = selectedFrameId === frameId;
   const isPrototypeMode = mode === "prototype";
@@ -90,13 +99,19 @@ const DeviceFrame = ({
 
   // Update screen position for connector drawing
   useEffect(() => {
-      updateScreenPosition(frameId, {
+    updateScreenPosition(frameId, {
       x: framePosition.x,
       y: framePosition.y,
       width: DEVICE_WIDTH,
       height: contentHeight,
     });
-  }, [frameId, framePosition, updateScreenPosition, DEVICE_WIDTH, contentHeight]);
+  }, [
+    frameId,
+    framePosition,
+    updateScreenPosition,
+    DEVICE_WIDTH,
+    contentHeight,
+  ]);
 
   // Listen for iframe content height changes (for both web and mobile designs with flexible height)
   useEffect(() => {
@@ -120,14 +135,14 @@ const DeviceFrame = ({
         setFrameRect(containerRef.current.getBoundingClientRect());
       }
     };
-    
+
     updateRect();
-    window.addEventListener('resize', updateRect);
-    window.addEventListener('scroll', updateRect);
-    
+    window.addEventListener("resize", updateRect);
+    window.addEventListener("scroll", updateRect);
+
     return () => {
-      window.removeEventListener('resize', updateRect);
-      window.removeEventListener('scroll', updateRect);
+      window.removeEventListener("resize", updateRect);
+      window.removeEventListener("scroll", updateRect);
     };
   }, [framePosition]);
 
@@ -143,7 +158,7 @@ const DeviceFrame = ({
     try {
       // Use actual content height
       const screenshotHeight = contentHeight;
-      
+
       const response = await axios.post(
         "/api/screenshot",
         {
@@ -154,7 +169,7 @@ const DeviceFrame = ({
         {
           responseType: "blob",
           validateStatus: (s) => (s >= 200 && s < 300) || s === 304,
-        }
+        },
       );
       const url = window.URL.createObjectURL(response.data);
       const link = document.createElement("a");
@@ -170,7 +185,7 @@ const DeviceFrame = ({
     } finally {
       setIsDownloading(false);
     }
-    }, [fullHtml, isDownloading, title, contentHeight, DEVICE_WIDTH]);
+  }, [fullHtml, isDownloading, title, contentHeight, DEVICE_WIDTH]);
 
   const handleRegenerate = useCallback(
     (prompt: string) => {
@@ -183,10 +198,10 @@ const DeviceFrame = ({
           onError: () => {
             updateFrame(frameId, { isLoading: false });
           },
-        }
+        },
       );
     },
-    [frameId, regenerateMutation, updateFrame]
+    [frameId, regenerateMutation, updateFrame],
   );
 
   const handleDeleteFrame = useCallback(() => {
@@ -197,36 +212,66 @@ const DeviceFrame = ({
     if (isCopyingToFigma) return;
     setIsCopyingToFigma(true);
     try {
-      // Use actual content height
-      const figmaHeight = contentHeight;
-      
-      // Pass the iframe reference for better conversion
-      await copyDesignToFigma(
-        iframeRef.current,
-        html,
-        DEVICE_WIDTH,
-        figmaHeight,
-        title
+      const iframeDoc = iframeRef.current?.contentDocument;
+      const body = iframeDoc?.body;
+      if (!body) {
+        toast.error(
+          "Design not ready. Wait for the frame to load, then try again.",
+        );
+        return;
+      }
+      const tree = parseHtmlToDesignTree(body, {
+        frameId,
+        frameName: title,
+        frameWidth: DEVICE_WIDTH,
+        frameHeight: contentHeight,
+      });
+      let embeddedImages: Record<string, string> = {};
+      const urls = collectImageUrlsFromTree(tree);
+      if (urls.length > 0) {
+        try {
+          const res = await fetch("/api/embed-images", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ urls }),
+          });
+          if (res.ok) {
+            const data = await res.json();
+            if (data.images) embeddedImages = data.images;
+          }
+        } catch {
+          // continue without embedded images
+        }
+      }
+      await copyDesignTreeAsSvg(tree, {
+        embeddedImages: Object.keys(embeddedImages).length
+          ? embeddedImages
+          : undefined,
+      });
+      toast.success(
+        "Design copied as SVG! Paste in Figma (Ctrl+V or Cmd+V) for vector layers—no plugin needed.",
       );
-
-      toast.success("Design copied! Paste in Figma (Ctrl+V or Cmd+V)");
     } catch (error) {
       console.error(error);
       toast.error("Failed to copy design to Figma");
     } finally {
       setIsCopyingToFigma(false);
     }
-    }, [html, title, isCopyingToFigma, contentHeight, DEVICE_WIDTH]);
+  }, [frameId, title, isCopyingToFigma, contentHeight, DEVICE_WIDTH]);
 
   // Handle click in prototype mode - used for drop target
   const handlePrototypeClick = useCallback(
     (e: React.MouseEvent) => {
-      if (isPrototypeMode && linkingState.isLinking && linkingState.fromScreenId !== frameId) {
+      if (
+        isPrototypeMode &&
+        linkingState.isLinking &&
+        linkingState.fromScreenId !== frameId
+      ) {
         e.stopPropagation();
         finishLinking(frameId);
       }
     },
-    [isPrototypeMode, linkingState, frameId, finishLinking]
+    [isPrototypeMode, linkingState, frameId, finishLinking],
   );
 
   return (
@@ -254,7 +299,7 @@ const DeviceFrame = ({
       }}
       onClick={(e: any) => {
         e.stopPropagation();
-        
+
         // Handle prototype mode drop
         if (isPrototypeMode && linkingState.isLinking) {
           if (linkingState.fromScreenId !== frameId) {
@@ -262,7 +307,7 @@ const DeviceFrame = ({
           }
           return;
         }
-        
+
         if (toolMode === TOOL_MODE_ENUM.SELECT && !isPrototypeMode) {
           setSelectedFrameId(frameId);
         }
@@ -292,13 +337,15 @@ const DeviceFrame = ({
           toolMode !== TOOL_MODE_ENUM.HAND &&
           !isPrototypeMode &&
           "ring-3 ring-blue-400 ring-offset-1",
-        isPrototypeMode && linkingState.isLinking && linkingState.fromScreenId !== frameId &&
+        isPrototypeMode &&
+          linkingState.isLinking &&
+          linkingState.fromScreenId !== frameId &&
           "ring-3 ring-indigo-400 ring-offset-2 ring-dashed",
         toolMode === TOOL_MODE_ENUM.HAND
           ? "cursor-grab! active:cursor-grabbing!"
           : isPrototypeMode
-          ? "cursor-default"
-          : "cursor-move"
+            ? "cursor-default"
+            : "cursor-move",
       )}
     >
       <div className="w-full h-full" ref={containerRef}>
@@ -339,15 +386,21 @@ const DeviceFrame = ({
           className={cn(
             `relative w-full h-auto overflow-hidden bg-black shadow-2xl`,
             deviceType === "mobile" ? "rounded-[36px]" : "rounded-lg",
-            isSelected && toolMode !== TOOL_MODE_ENUM.HAND && !isPrototypeMode && "rounded-none",
-            isPrototypeMode && (deviceType === "mobile" ? "rounded-2xl" : "rounded-lg")
+            isSelected &&
+              toolMode !== TOOL_MODE_ENUM.HAND &&
+              !isPrototypeMode &&
+              "rounded-none",
+            isPrototypeMode &&
+              (deviceType === "mobile" ? "rounded-2xl" : "rounded-lg"),
           )}
           onClick={handlePrototypeClick}
         >
-          <div className={cn(
-            "relative bg-white dark:bg-background",
-            "overflow-visible"
-          )}>
+          <div
+            className={cn(
+              "relative bg-white dark:bg-background",
+              "overflow-visible",
+            )}
+          >
             {isLoading ? (
               <DeviceFrameSkeleton
                 style={{
@@ -360,7 +413,7 @@ const DeviceFrame = ({
             ) : (
               <>
                 <iframe
-                  key={`${frameId}-${font?.id || 'default'}`}
+                  key={`${frameId}-${font?.id || "default"}`}
                   ref={iframeRef}
                   srcDoc={fullHtml}
                   title={title}
@@ -371,12 +424,17 @@ const DeviceFrame = ({
                     height: actualHeight,
                     border: "none",
                     // Enable pointer events when selected in design mode for hover detection
-                    pointerEvents: isSelected && !isPrototypeMode && toolMode === TOOL_MODE_ENUM.SELECT ? "auto" : "none",
+                    pointerEvents:
+                      isSelected &&
+                      !isPrototypeMode &&
+                      toolMode === TOOL_MODE_ENUM.SELECT
+                        ? "auto"
+                        : "none",
                     display: "block",
                     background: "transparent",
                   }}
                 />
-                
+
                 {/* Element hover overlay for design mode */}
                 {!isPrototypeMode && (
                   <ElementHoverOverlay
@@ -384,7 +442,7 @@ const DeviceFrame = ({
                     isActive={isSelected && toolMode === TOOL_MODE_ENUM.SELECT}
                   />
                 )}
-                
+
                 {/* Prototype element overlay */}
                 {isPrototypeMode && !isLoading && (
                   <PrototypeElementOverlay

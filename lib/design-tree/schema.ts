@@ -1,6 +1,6 @@
 /**
  * Zod Validation Schemas for Design Tree
- * 
+ *
  * These schemas validate AI-generated Design Tree JSON output.
  * They mirror the TypeScript types in types/design-tree.ts.
  */
@@ -15,10 +15,14 @@ export const FillSchema = z.object({
   type: z.enum(["solid", "gradient", "image"]),
   color: z.string().optional(),
   opacity: z.number().min(0).max(1).optional(),
-  gradientStops: z.array(z.object({
-    color: z.string(),
-    position: z.number(),
-  })).optional(),
+  gradientStops: z
+    .array(
+      z.object({
+        color: z.string(),
+        position: z.number(),
+      }),
+    )
+    .optional(),
   gradientAngle: z.number().optional(),
   imageUrl: z.string().optional(),
   imageScaleMode: z.enum(["fill", "fit", "crop", "tile"]).optional(),
@@ -66,11 +70,23 @@ export const PartialTextStyleSchema = z.object({
   fontFamily: z.string().optional().default("var(--font-sans)"),
   fontSize: z.number().optional().default(16),
   fontWeight: z.number().min(100).max(900).optional().default(400),
-  lineHeight: z.union([z.number(), z.literal("auto")]).optional().default(1.5),
+  lineHeight: z
+    .union([z.number(), z.literal("auto")])
+    .optional()
+    .default(1.5),
   letterSpacing: z.number().optional().default(0),
-  textAlign: z.enum(["left", "center", "right", "justify"]).optional().default("left"),
-  textDecoration: z.enum(["none", "underline", "line-through"]).optional().default("none"),
-  textTransform: z.enum(["none", "uppercase", "lowercase", "capitalize"]).optional().default("none"),
+  textAlign: z
+    .enum(["left", "center", "right", "justify"])
+    .optional()
+    .default("left"),
+  textDecoration: z
+    .enum(["none", "underline", "line-through"])
+    .optional()
+    .default("none"),
+  textTransform: z
+    .enum(["none", "uppercase", "lowercase", "capitalize"])
+    .optional()
+    .default("none"),
 });
 
 // ============================================================================
@@ -86,10 +102,28 @@ export const PaddingSchema = z.object({
 
 export const LayoutPropertiesSchema = z.object({
   mode: z.enum(["none", "horizontal", "vertical", "wrap"]),
-  padding: PaddingSchema.optional().default({ top: 0, right: 0, bottom: 0, left: 0 }),
+  padding: PaddingSchema.optional().default({
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+  }),
   gap: z.number().optional().default(0),
-  alignItems: z.enum(["start", "center", "end", "stretch", "baseline"]).optional().default("start"),
-  justifyContent: z.enum(["start", "center", "end", "space-between", "space-around", "space-evenly"]).optional().default("start"),
+  alignItems: z
+    .enum(["start", "center", "end", "stretch", "baseline"])
+    .optional()
+    .default("start"),
+  justifyContent: z
+    .enum([
+      "start",
+      "center",
+      "end",
+      "space-between",
+      "space-around",
+      "space-evenly",
+    ])
+    .optional()
+    .default("start"),
   wrap: z.boolean().optional().default(false),
 });
 
@@ -154,7 +188,10 @@ export const ImageNodeSchema = BaseDesignNodeSchema.extend({
   type: z.literal("image"),
   src: z.string(),
   alt: z.string().optional(),
-  objectFit: z.enum(["cover", "contain", "fill", "none"]).optional().default("cover"),
+  objectFit: z
+    .enum(["cover", "contain", "fill", "none"])
+    .optional()
+    .default("cover"),
 });
 
 export const IconNodeSchema = BaseDesignNodeSchema.extend({
@@ -162,6 +199,7 @@ export const IconNodeSchema = BaseDesignNodeSchema.extend({
   iconName: z.string(),
   iconLibrary: z.string().optional().default("hugeicons"),
   color: z.string().optional(),
+  svgPathData: z.array(z.string()).optional(),
 });
 
 export const RectangleNodeSchema = BaseDesignNodeSchema.extend({
@@ -205,7 +243,7 @@ export const ButtonNodeSchema = BaseDesignNodeSchema.extend({
 });
 
 // Union of all node types
-export const DesignNodeSchema: z.ZodType<any> = z.lazy(() => 
+export const DesignNodeSchema: z.ZodType<any> = z.lazy(() =>
   z.discriminatedUnion("type", [
     FrameNodeSchema,
     GroupNodeSchema,
@@ -216,7 +254,7 @@ export const DesignNodeSchema: z.ZodType<any> = z.lazy(() =>
     ButtonNodeSchema,
     InputNodeSchema,
     SvgNodeSchema,
-  ] as const)
+  ] as const),
 );
 
 // ============================================================================
@@ -257,10 +295,14 @@ export const ComponentDefinitionSchema = z.object({
     "other",
   ]),
   tree: FrameNodeSchema,
-  variants: z.array(z.object({
-    name: z.string(),
-    overrides: z.record(z.string(), z.unknown()),
-  })).optional(),
+  variants: z
+    .array(
+      z.object({
+        name: z.string(),
+        overrides: z.record(z.string(), z.unknown()),
+      }),
+    )
+    .optional(),
   defaultProps: z.record(z.string(), z.unknown()).optional(),
 });
 
@@ -301,13 +343,17 @@ export function validateDesignNode(data: unknown): {
 /**
  * Parse Design Tree with error messages
  */
-export function parseDesignTree(json: string): z.infer<typeof DesignTreeSchema> {
+export function parseDesignTree(
+  json: string,
+): z.infer<typeof DesignTreeSchema> {
   try {
     const data = JSON.parse(json);
     return DesignTreeSchema.parse(data);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const issues = error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join(', ');
+      const issues = error.issues
+        .map((i) => `${i.path.join(".")}: ${i.message}`)
+        .join(", ");
       throw new Error(`Invalid Design Tree: ${issues}`);
     }
     throw error;
@@ -317,7 +363,9 @@ export function parseDesignTree(json: string): z.infer<typeof DesignTreeSchema> 
 /**
  * Safely parse Design Tree, returning null on error
  */
-export function safeParseDesignTree(json: string): z.infer<typeof DesignTreeSchema> | null {
+export function safeParseDesignTree(
+  json: string,
+): z.infer<typeof DesignTreeSchema> | null {
   try {
     return parseDesignTree(json);
   } catch {

@@ -16,7 +16,7 @@ async function getChromiumPath(): Promise<string> {
     const chromium = (await import("@sparticuz/chromium-min")).default;
     downloadPromise = chromium
       .executablePath(
-        "https://github.com/Sparticuz/chromium/releases/download/v121.0.0/chromium-v121.0.0-pack.tar"
+        "https://github.com/Sparticuz/chromium/releases/download/v121.0.0/chromium-v121.0.0-pack.tar",
       )
       .then((path) => {
         cachedExecutablePath = path;
@@ -118,7 +118,7 @@ export async function POST(req: Request) {
       {
         error: "Failed to screenshot",
       },
-      { status: 500 }
+      { status: 500 },
     );
   } finally {
     if (browser) await browser.close();

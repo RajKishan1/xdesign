@@ -1,14 +1,14 @@
 /**
  * Design Tree to Figma Export - IMPROVED VERSION
- * 
+ *
  * Creates Figma-compatible export formats:
  * 1. Figma Plugin JSON - For import via Figma plugin (best editability)
  * 2. Enhanced SVG - Preserves layer hierarchy as nested groups
  * 3. HTML for image capture - Fallback for quick copy
- * 
+ *
  * The Figma Plugin JSON format creates proper frames with auto-layout,
  * text layers, and other Figma-native features.
- * 
+ *
  * IMPORTANT: All container elements (frame, group, button, section, div, etc.)
  * are converted to Figma FRAME nodes to ensure proper layer hierarchy
  * and enable auto-layout, constraints, and layout editing in Figma.
@@ -25,10 +25,11 @@ import {
   InputNode,
   RectangleNode,
   GroupNode,
+  SvgNode,
   Fill,
   Stroke,
   Shadow,
-} from '@/types/design-tree';
+} from "@/types/design-tree";
 
 // ============================================================================
 // THEME COLOR RESOLVER
@@ -36,26 +37,26 @@ import {
 
 // Default theme colors to resolve CSS variables
 const DEFAULT_THEME_COLORS: Record<string, string> = {
-  '--background': '#ffffff',
-  '--foreground': '#0a0a0a',
-  '--card': '#ffffff',
-  '--card-foreground': '#0a0a0a',
-  '--popover': '#ffffff',
-  '--popover-foreground': '#0a0a0a',
-  '--primary': '#171717',
-  '--primary-foreground': '#fafafa',
-  '--secondary': '#f5f5f5',
-  '--secondary-foreground': '#171717',
-  '--muted': '#f5f5f5',
-  '--muted-foreground': '#737373',
-  '--accent': '#f5f5f5',
-  '--accent-foreground': '#171717',
-  '--destructive': '#ef4444',
-  '--border': '#e5e5e5',
-  '--input': '#e5e5e5',
-  '--ring': '#0a0a0a',
-  '--font-sans': 'Inter',
-  '--font-heading': 'Space Grotesk',
+  "--background": "#ffffff",
+  "--foreground": "#0a0a0a",
+  "--card": "#ffffff",
+  "--card-foreground": "#0a0a0a",
+  "--popover": "#ffffff",
+  "--popover-foreground": "#0a0a0a",
+  "--primary": "#171717",
+  "--primary-foreground": "#fafafa",
+  "--secondary": "#f5f5f5",
+  "--secondary-foreground": "#171717",
+  "--muted": "#f5f5f5",
+  "--muted-foreground": "#737373",
+  "--accent": "#f5f5f5",
+  "--accent-foreground": "#171717",
+  "--destructive": "#ef4444",
+  "--border": "#e5e5e5",
+  "--input": "#e5e5e5",
+  "--ring": "#0a0a0a",
+  "--font-sans": "Inter",
+  "--font-heading": "Space Grotesk",
 };
 
 let resolvedTheme: Record<string, string> = { ...DEFAULT_THEME_COLORS };
@@ -65,7 +66,7 @@ let resolvedTheme: Record<string, string> = { ...DEFAULT_THEME_COLORS };
  */
 export function setThemeColors(themeStyle: string): void {
   resolvedTheme = { ...DEFAULT_THEME_COLORS };
-  
+
   // Parse theme CSS string
   const matches = themeStyle.matchAll(/--([a-z-]+):\s*([^;]+);/g);
   for (const match of matches) {
@@ -77,10 +78,10 @@ export function setThemeColors(themeStyle: string): void {
  * Resolve a color value, handling CSS variables
  */
 function resolveColor(color: string): string {
-  if (!color) return '#000000';
-  
+  if (!color) return "#000000";
+
   // Handle CSS variables
-  if (color.includes('var(')) {
+  if (color.includes("var(")) {
     const varMatch = color.match(/var\(([^)]+)\)/);
     if (varMatch) {
       const varName = varMatch[1].trim();
@@ -90,9 +91,9 @@ function resolveColor(color: string): string {
         return resolveColor(resolved);
       }
     }
-    return '#000000';
+    return "#000000";
   }
-  
+
   return color;
 }
 
@@ -108,17 +109,20 @@ interface FigmaColor {
 }
 
 interface FigmaPaint {
-  type: 'SOLID' | 'GRADIENT_LINEAR' | 'IMAGE';
+  type: "SOLID" | "GRADIENT_LINEAR" | "IMAGE";
   color?: FigmaColor;
   opacity?: number;
   visible?: boolean;
   gradientStops?: { color: FigmaColor; position: number }[];
   scaleMode?: string;
+  /** URL - Figma plugin cannot load external URLs */
   imageHash?: string;
+  /** Embedded base64 image data - use this so Figma gets real image fill */
+  imageBase64?: string;
 }
 
 interface FigmaEffect {
-  type: 'DROP_SHADOW' | 'INNER_SHADOW' | 'LAYER_BLUR' | 'BACKGROUND_BLUR';
+  type: "DROP_SHADOW" | "INNER_SHADOW" | "LAYER_BLUR" | "BACKGROUND_BLUR";
   visible: boolean;
   radius: number;
   color?: FigmaColor;
@@ -130,13 +134,13 @@ interface FigmaTypeStyle {
   fontFamily: string;
   fontSize: number;
   fontWeight: number;
-  textAlignHorizontal: 'LEFT' | 'CENTER' | 'RIGHT' | 'JUSTIFIED';
-  textAlignVertical: 'TOP' | 'CENTER' | 'BOTTOM';
+  textAlignHorizontal: "LEFT" | "CENTER" | "RIGHT" | "JUSTIFIED";
+  textAlignVertical: "TOP" | "CENTER" | "BOTTOM";
   letterSpacing: number;
   lineHeightPx?: number;
   lineHeightPercent?: number;
-  textCase?: 'ORIGINAL' | 'UPPER' | 'LOWER' | 'TITLE';
-  textDecoration?: 'NONE' | 'UNDERLINE' | 'STRIKETHROUGH';
+  textCase?: "ORIGINAL" | "UPPER" | "LOWER" | "TITLE";
+  textDecoration?: "NONE" | "UNDERLINE" | "STRIKETHROUGH";
 }
 
 interface FigmaBaseNode {
@@ -154,11 +158,11 @@ interface FigmaBaseNode {
 }
 
 interface FigmaFrameNode extends FigmaBaseNode {
-  type: 'FRAME';
+  type: "FRAME";
   fills: FigmaPaint[];
   strokes: FigmaPaint[];
   strokeWeight: number;
-  strokeAlign: 'INSIDE' | 'OUTSIDE' | 'CENTER';
+  strokeAlign: "INSIDE" | "OUTSIDE" | "CENTER";
   cornerRadius: number;
   topLeftRadius?: number;
   topRightRadius?: number;
@@ -167,42 +171,42 @@ interface FigmaFrameNode extends FigmaBaseNode {
   effects: FigmaEffect[];
   clipsContent: boolean;
   // Auto-layout properties - ALWAYS set for proper Frame behavior
-  layoutMode: 'NONE' | 'HORIZONTAL' | 'VERTICAL';
-  primaryAxisSizingMode: 'FIXED' | 'AUTO';
-  counterAxisSizingMode: 'FIXED' | 'AUTO';
-  primaryAxisAlignItems: 'MIN' | 'CENTER' | 'MAX' | 'SPACE_BETWEEN';
-  counterAxisAlignItems: 'MIN' | 'CENTER' | 'MAX' | 'BASELINE';
+  layoutMode: "NONE" | "HORIZONTAL" | "VERTICAL";
+  primaryAxisSizingMode: "FIXED" | "AUTO";
+  counterAxisSizingMode: "FIXED" | "AUTO";
+  primaryAxisAlignItems: "MIN" | "CENTER" | "MAX" | "SPACE_BETWEEN";
+  counterAxisAlignItems: "MIN" | "CENTER" | "MAX" | "BASELINE";
   paddingLeft: number;
   paddingRight: number;
   paddingTop: number;
   paddingBottom: number;
   itemSpacing: number;
-  layoutWrap?: 'NO_WRAP' | 'WRAP';
+  layoutWrap?: "NO_WRAP" | "WRAP";
   // Layout positioning for children
-  layoutPositioning?: 'AUTO' | 'ABSOLUTE';
+  layoutPositioning?: "AUTO" | "ABSOLUTE";
   // Constraints for resize behavior
   constraints?: {
-    horizontal: 'MIN' | 'CENTER' | 'MAX' | 'STRETCH' | 'SCALE';
-    vertical: 'MIN' | 'CENTER' | 'MAX' | 'STRETCH' | 'SCALE';
+    horizontal: "MIN" | "CENTER" | "MAX" | "STRETCH" | "SCALE";
+    vertical: "MIN" | "CENTER" | "MAX" | "STRETCH" | "SCALE";
   };
   children: FigmaPluginNode[];
 }
 
 interface FigmaTextNode extends FigmaBaseNode {
-  type: 'TEXT';
+  type: "TEXT";
   characters: string;
   style: FigmaTypeStyle;
   fills: FigmaPaint[];
   effects: FigmaEffect[];
   // Text auto-resize
-  textAutoResize: 'NONE' | 'WIDTH_AND_HEIGHT' | 'HEIGHT';
+  textAutoResize: "NONE" | "WIDTH_AND_HEIGHT" | "HEIGHT";
   // Layout constraints
-  layoutAlign?: 'INHERIT' | 'STRETCH' | 'MIN' | 'CENTER' | 'MAX';
+  layoutAlign?: "INHERIT" | "STRETCH" | "MIN" | "CENTER" | "MAX";
   layoutGrow?: number;
 }
 
 interface FigmaRectangleNode extends FigmaBaseNode {
-  type: 'RECTANGLE';
+  type: "RECTANGLE";
   fills: FigmaPaint[];
   strokes: FigmaPaint[];
   strokeWeight: number;
@@ -213,23 +217,39 @@ interface FigmaRectangleNode extends FigmaBaseNode {
   bottomLeftRadius?: number;
   effects: FigmaEffect[];
   // Layout constraints
-  layoutAlign?: 'INHERIT' | 'STRETCH' | 'MIN' | 'CENTER' | 'MAX';
+  layoutAlign?: "INHERIT" | "STRETCH" | "MIN" | "CENTER" | "MAX";
   layoutGrow?: number;
 }
 
 interface FigmaEllipseNode extends FigmaBaseNode {
-  type: 'ELLIPSE';
+  type: "ELLIPSE";
   fills: FigmaPaint[];
   strokes: FigmaPaint[];
   strokeWeight: number;
   effects: FigmaEffect[];
 }
 
-type FigmaPluginNode = FigmaFrameNode | FigmaTextNode | FigmaRectangleNode | FigmaEllipseNode;
+/** Vector (SVG path) node - icons and SVG elements export as this */
+interface FigmaVectorNode extends FigmaBaseNode {
+  type: "VECTOR";
+  fills: FigmaPaint[];
+  strokes: FigmaPaint[];
+  strokeWeight: number;
+  effects: FigmaEffect[];
+  /** SVG path d strings - Figma vectorPaths[].data */
+  vectorPaths: { windingRule: "NONZERO" | "EVENODD"; data: string }[];
+}
+
+type FigmaPluginNode =
+  | FigmaFrameNode
+  | FigmaTextNode
+  | FigmaRectangleNode
+  | FigmaEllipseNode
+  | FigmaVectorNode;
 
 interface FigmaPluginExport {
-  version: '1.0';
-  type: 'XDESIGN_FIGMA_EXPORT';
+  version: "1.0";
+  type: "XDESIGN_FIGMA_EXPORT";
   name: string;
   width: number;
   height: number;
@@ -253,12 +273,16 @@ export interface FigmaExportOptions {
   includeImages?: boolean;
   // Convert all containers to frames (recommended)
   allContainersAsFrames?: boolean;
+  /** URL -> base64 string; images with these URLs will be exported as imageBase64 for Figma */
+  embeddedImages?: Record<string, string>;
+  /** Resolve image URLs to base64 before export (default true). Set false to skip. */
+  embedImages?: boolean;
 }
 
 /**
  * Convert Design Tree to Figma Plugin JSON format
  * This format can be imported by a Figma plugin to create proper editable layers
- * 
+ *
  * IMPORTANT: All container elements are converted to FRAME type to ensure
  * proper layer hierarchy in Figma. This enables:
  * - Auto-layout on all containers
@@ -267,24 +291,24 @@ export interface FigmaExportOptions {
  */
 export function convertTreeToFigmaPlugin(
   tree: DesignTree,
-  options: FigmaExportOptions = {}
+  options: FigmaExportOptions = {},
 ): FigmaPluginExport {
   // Set theme colors for resolution
   if (options.themeStyle) {
     setThemeColors(options.themeStyle);
   }
-  
+
   // Default to converting all containers as frames
   const exportOptions = {
     ...options,
     allContainersAsFrames: options.allContainersAsFrames !== false,
   };
-  
+
   const rootNode = convertNodeToFigma(tree.root, exportOptions, true);
-  
+
   return {
-    version: '1.0',
-    type: 'XDESIGN_FIGMA_EXPORT',
+    version: "1.0",
+    type: "XDESIGN_FIGMA_EXPORT",
     name: tree.name,
     width: tree.width,
     height: tree.height,
@@ -298,28 +322,82 @@ export function convertTreeToFigmaPlugin(
 }
 
 /**
- * Copy Design Tree as Figma Plugin JSON to clipboard
+ * Collect all image URLs from a design tree (ImageNode.src and image fills).
+ * Used to resolve them to base64 before Figma export so images embed correctly.
+ */
+export function collectImageUrlsFromTree(tree: DesignTree): string[] {
+  const urls = new Set<string>();
+  function visit(node: DesignNode) {
+    if (node.type === "image" && (node as ImageNode).src) {
+      const src = (node as ImageNode).src;
+      if (src.startsWith("http") || src.startsWith("data:")) urls.add(src);
+    }
+    if (node.fills) {
+      node.fills.forEach((f) => {
+        if (
+          f.type === "image" &&
+          f.imageUrl &&
+          (f.imageUrl.startsWith("http") || f.imageUrl.startsWith("data:"))
+        ) {
+          urls.add(f.imageUrl);
+        }
+      });
+    }
+    const withChildren = node as DesignNode & { children?: DesignNode[] };
+    if (Array.isArray(withChildren.children)) {
+      withChildren.children.forEach(visit);
+    }
+  }
+  visit(tree.root);
+  return Array.from(urls);
+}
+
+/**
+ * Copy Design Tree as Figma Plugin JSON to clipboard.
+ * If options.embedImages is true, collects image URLs and resolves them to base64 via API before export.
  */
 export async function copyDesignTreeToFigma(
   tree: DesignTree,
-  options: FigmaExportOptions = {}
+  options: FigmaExportOptions = {},
 ): Promise<void> {
-  const figmaData = convertTreeToFigmaPlugin(tree, options);
+  let exportOptions = { ...options };
+  if (options.embedImages !== false) {
+    const urls = collectImageUrlsFromTree(tree);
+    if (urls.length > 0 && typeof fetch !== "undefined") {
+      try {
+        const res = await fetch("/api/embed-images", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ urls }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.images && typeof data.images === "object") {
+            exportOptions = { ...exportOptions, embeddedImages: data.images };
+          }
+        }
+      } catch {
+        // Proceed without embedded images
+      }
+    }
+  }
+  const figmaData = convertTreeToFigmaPlugin(tree, exportOptions);
   const jsonString = JSON.stringify(figmaData, null, 2);
-  
+
   try {
-    // Copy both the JSON and as plain text for flexibility
-    if (navigator.clipboard.write && typeof ClipboardItem !== 'undefined') {
+    if (navigator.clipboard.write && typeof ClipboardItem !== "undefined") {
       const items = new ClipboardItem({
-        'text/plain': new Blob([jsonString], { type: 'text/plain' }),
-        'application/json': new Blob([jsonString], { type: 'application/json' }),
+        "text/plain": new Blob([jsonString], { type: "text/plain" }),
+        "application/json": new Blob([jsonString], {
+          type: "application/json",
+        }),
       });
       await navigator.clipboard.write([items]);
     } else {
       await navigator.clipboard.writeText(jsonString);
     }
   } catch (error) {
-    console.error('Failed to copy to clipboard:', error);
+    console.error("Failed to copy to clipboard:", error);
     await navigator.clipboard.writeText(jsonString);
   }
 }
@@ -329,16 +407,16 @@ export async function copyDesignTreeToFigma(
  */
 export function downloadFigmaPluginJson(
   tree: DesignTree,
-  options: FigmaExportOptions = {}
+  options: FigmaExportOptions = {},
 ): void {
   const figmaData = convertTreeToFigmaPlugin(tree, options);
   const jsonString = JSON.stringify(figmaData, null, 2);
-  
-  const blob = new Blob([jsonString], { type: 'application/json' });
+
+  const blob = new Blob([jsonString], { type: "application/json" });
   const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
+  const link = document.createElement("a");
   link.href = url;
-  link.download = `${tree.name.replace(/\s+/g, '-').toLowerCase()}-figma.json`;
+  link.download = `${tree.name.replace(/\s+/g, "-").toLowerCase()}-figma.json`;
   link.click();
   URL.revokeObjectURL(url);
 }
@@ -353,7 +431,7 @@ export function downloadFigmaPluginJson(
  */
 function shouldBeFrame(node: DesignNode): boolean {
   // These types should ALWAYS be frames in Figma
-  const frameTypes = ['frame', 'group', 'button'];
+  const frameTypes = ["frame", "group", "button"];
   return frameTypes.includes(node.type);
 }
 
@@ -361,38 +439,40 @@ function shouldBeFrame(node: DesignNode): boolean {
  * Check if a node has children (is a container)
  */
 function isContainer(node: DesignNode): boolean {
-  return 'children' in node && Array.isArray((node as any).children);
+  return "children" in node && Array.isArray((node as any).children);
 }
 
 function convertNodeToFigma(
   node: DesignNode,
   options: FigmaExportOptions,
-  isRoot: boolean = false
+  isRoot: boolean = false,
 ): FigmaPluginNode | null {
   if (node.visible === false) return null;
-  
+
   // Determine if this node should be a frame
   const convertToFrame = options.allContainersAsFrames && isContainer(node);
-  
+
   switch (node.type) {
-    case 'frame':
+    case "frame":
       return convertFrameToFigma(node as FrameNode, options, isRoot);
-    case 'group':
+    case "group":
       // IMPORTANT: Convert groups to frames for proper Figma hierarchy
       return convertGroupToFrame(node as GroupNode, options);
-    case 'text':
-      return convertTextToFigma(node as TextNode);
-    case 'image':
-      return convertImageToFigma(node as ImageNode);
-    case 'icon':
+    case "text":
+      return convertTextToFigma(node as TextNode, options);
+    case "image":
+      return convertImageToFigma(node as ImageNode, options);
+    case "icon":
       return convertIconToFigma(node as IconNode, options);
-    case 'button':
+    case "button":
       // Buttons are frames with children
       return convertButtonToFrame(node as ButtonNode, options);
-    case 'input':
+    case "input":
       return convertInputToFigma(node as InputNode);
-    case 'rectangle':
-      return convertRectangleToFigma(node as RectangleNode);
+    case "rectangle":
+      return convertRectangleToFigma(node as RectangleNode, options);
+    case "svg":
+      return convertSvgToFigma(node as SvgNode, options);
     default:
       // For unknown types with children, convert to frame
       if (isContainer(node)) {
@@ -408,30 +488,34 @@ function convertNodeToFigma(
 function convertFrameToFigma(
   node: FrameNode,
   options: FigmaExportOptions,
-  isRoot: boolean = false
+  isRoot: boolean = false,
 ): FigmaFrameNode {
   const children: FigmaPluginNode[] = [];
-  
+
   for (const child of node.children || []) {
     const figmaChild = convertNodeToFigma(child, options, false);
     if (figmaChild) {
       children.push(figmaChild);
     }
   }
-  
+
   // Determine layout mode
-  let layoutMode: 'NONE' | 'HORIZONTAL' | 'VERTICAL' = 'NONE';
+  let layoutMode: "NONE" | "HORIZONTAL" | "VERTICAL" = "NONE";
   let hasAutoLayout = false;
-  
-  if (options.preserveLayout !== false && node.layout && node.layout.mode !== 'none') {
-    layoutMode = node.layout.mode === 'vertical' ? 'VERTICAL' : 'HORIZONTAL';
+
+  if (
+    options.preserveLayout !== false &&
+    node.layout &&
+    node.layout.mode !== "none"
+  ) {
+    layoutMode = node.layout.mode === "vertical" ? "VERTICAL" : "HORIZONTAL";
     hasAutoLayout = true;
   }
-  
+
   const figmaNode: FigmaFrameNode = {
     id: node.id,
-    name: node.name || 'Frame',
-    type: 'FRAME', // Always FRAME, never GROUP
+    name: node.name || "Frame",
+    type: "FRAME", // Always FRAME, never GROUP
     visible: node.visible !== false,
     locked: node.locked || false,
     opacity: node.opacity ?? 1,
@@ -439,83 +523,87 @@ function convertFrameToFigma(
     y: node.y,
     width: node.width,
     height: node.height,
-    fills: convertFillsToFigma(node.fills),
+    fills: convertFillsToFigma(node.fills, options),
     strokes: convertStrokesToFigma(node.strokes),
     strokeWeight: node.strokes?.[0]?.width || 0,
-    strokeAlign: 'INSIDE',
-    cornerRadius: typeof node.cornerRadius === 'number' ? node.cornerRadius : 0,
+    strokeAlign: "INSIDE",
+    cornerRadius: typeof node.cornerRadius === "number" ? node.cornerRadius : 0,
     effects: convertEffectsToFigma(node.shadows, node.blur, node.backdropBlur),
     clipsContent: node.clipContent ?? true, // Default to clipping for frames
     // Auto-layout properties
     layoutMode: layoutMode,
-    primaryAxisSizingMode: hasAutoLayout ? 'AUTO' : 'FIXED',
-    counterAxisSizingMode: 'FIXED',
-    primaryAxisAlignItems: 'MIN',
-    counterAxisAlignItems: 'MIN',
+    primaryAxisSizingMode: hasAutoLayout ? "AUTO" : "FIXED",
+    counterAxisSizingMode: "FIXED",
+    primaryAxisAlignItems: "MIN",
+    counterAxisAlignItems: "MIN",
     paddingLeft: 0,
     paddingRight: 0,
     paddingTop: 0,
     paddingBottom: 0,
     itemSpacing: 0,
-    layoutPositioning: hasAutoLayout ? 'AUTO' : 'ABSOLUTE',
+    layoutPositioning: hasAutoLayout ? "AUTO" : "ABSOLUTE",
     children,
   };
-  
+
   // Handle individual corner radii
-  if (typeof node.cornerRadius === 'object') {
+  if (typeof node.cornerRadius === "object") {
     figmaNode.topLeftRadius = node.cornerRadius.topLeft;
     figmaNode.topRightRadius = node.cornerRadius.topRight;
     figmaNode.bottomRightRadius = node.cornerRadius.bottomRight;
     figmaNode.bottomLeftRadius = node.cornerRadius.bottomLeft;
   }
-  
+
   // Apply auto-layout properties if enabled
   if (hasAutoLayout && node.layout) {
     const layout = node.layout;
-    
+
     figmaNode.itemSpacing = layout.gap || 0;
-    
+
     if (layout.padding) {
       figmaNode.paddingTop = layout.padding.top;
       figmaNode.paddingRight = layout.padding.right;
       figmaNode.paddingBottom = layout.padding.bottom;
       figmaNode.paddingLeft = layout.padding.left;
     }
-    
+
     // Alignment mapping
-    const alignMap: Record<string, 'MIN' | 'CENTER' | 'MAX'> = {
-      'start': 'MIN',
-      'center': 'CENTER',
-      'end': 'MAX',
-      'stretch': 'MIN',
-      'baseline': 'MIN',
+    const alignMap: Record<string, "MIN" | "CENTER" | "MAX"> = {
+      start: "MIN",
+      center: "CENTER",
+      end: "MAX",
+      stretch: "MIN",
+      baseline: "MIN",
     };
-    
-    const justifyMap: Record<string, 'MIN' | 'CENTER' | 'MAX' | 'SPACE_BETWEEN'> = {
-      'start': 'MIN',
-      'center': 'CENTER',
-      'end': 'MAX',
-      'space-between': 'SPACE_BETWEEN',
-      'space-around': 'SPACE_BETWEEN',
-      'space-evenly': 'SPACE_BETWEEN',
+
+    const justifyMap: Record<
+      string,
+      "MIN" | "CENTER" | "MAX" | "SPACE_BETWEEN"
+    > = {
+      start: "MIN",
+      center: "CENTER",
+      end: "MAX",
+      "space-between": "SPACE_BETWEEN",
+      "space-around": "SPACE_BETWEEN",
+      "space-evenly": "SPACE_BETWEEN",
     };
-    
-    figmaNode.counterAxisAlignItems = alignMap[layout.alignItems] || 'MIN';
-    figmaNode.primaryAxisAlignItems = justifyMap[layout.justifyContent] || 'MIN';
-    
+
+    figmaNode.counterAxisAlignItems = alignMap[layout.alignItems] || "MIN";
+    figmaNode.primaryAxisAlignItems =
+      justifyMap[layout.justifyContent] || "MIN";
+
     if (layout.wrap) {
-      figmaNode.layoutWrap = 'WRAP';
+      figmaNode.layoutWrap = "WRAP";
     }
   }
-  
+
   // Set constraints for root frame
   if (isRoot) {
     figmaNode.constraints = {
-      horizontal: 'MIN',
-      vertical: 'MIN',
+      horizontal: "MIN",
+      vertical: "MIN",
     };
   }
-  
+
   return figmaNode;
 }
 
@@ -525,21 +613,21 @@ function convertFrameToFigma(
  */
 function convertGroupToFrame(
   node: GroupNode,
-  options: FigmaExportOptions
+  options: FigmaExportOptions,
 ): FigmaFrameNode {
   const children: FigmaPluginNode[] = [];
-  
+
   for (const child of node.children || []) {
     const figmaChild = convertNodeToFigma(child, options, false);
     if (figmaChild) {
       children.push(figmaChild);
     }
   }
-  
+
   return {
     id: node.id,
-    name: node.name || 'Group',
-    type: 'FRAME', // Convert to FRAME for proper Figma behavior
+    name: node.name || "Group",
+    type: "FRAME", // Convert to FRAME for proper Figma behavior
     visible: node.visible !== false,
     locked: node.locked || false,
     opacity: node.opacity ?? 1,
@@ -547,25 +635,25 @@ function convertGroupToFrame(
     y: node.y,
     width: node.width,
     height: node.height,
-    fills: convertFillsToFigma(node.fills) || [],
+    fills: convertFillsToFigma(node.fills, options) || [],
     strokes: convertStrokesToFigma(node.strokes) || [],
     strokeWeight: node.strokes?.[0]?.width || 0,
-    strokeAlign: 'INSIDE',
-    cornerRadius: typeof node.cornerRadius === 'number' ? node.cornerRadius : 0,
+    strokeAlign: "INSIDE",
+    cornerRadius: typeof node.cornerRadius === "number" ? node.cornerRadius : 0,
     effects: convertEffectsToFigma(node.shadows, node.blur, node.backdropBlur),
     clipsContent: false, // Groups typically don't clip
     // No auto-layout for groups by default
-    layoutMode: 'NONE',
-    primaryAxisSizingMode: 'FIXED',
-    counterAxisSizingMode: 'FIXED',
-    primaryAxisAlignItems: 'MIN',
-    counterAxisAlignItems: 'MIN',
+    layoutMode: "NONE",
+    primaryAxisSizingMode: "FIXED",
+    counterAxisSizingMode: "FIXED",
+    primaryAxisAlignItems: "MIN",
+    counterAxisAlignItems: "MIN",
     paddingLeft: 0,
     paddingRight: 0,
     paddingTop: 0,
     paddingBottom: 0,
     itemSpacing: 0,
-    layoutPositioning: 'ABSOLUTE',
+    layoutPositioning: "ABSOLUTE",
     children,
   };
 }
@@ -575,28 +663,28 @@ function convertGroupToFrame(
  */
 function convertButtonToFrame(
   node: ButtonNode,
-  options: FigmaExportOptions
+  options: FigmaExportOptions,
 ): FigmaFrameNode {
   const children: FigmaPluginNode[] = [];
-  
+
   for (const child of node.children || []) {
     const figmaChild = convertNodeToFigma(child, options, false);
     if (figmaChild) {
       children.push(figmaChild);
     }
   }
-  
+
   // Determine layout mode
-  let layoutMode: 'NONE' | 'HORIZONTAL' | 'VERTICAL' = 'HORIZONTAL'; // Default to horizontal for buttons
-  
-  if (node.layout && node.layout.mode !== 'none') {
-    layoutMode = node.layout.mode === 'vertical' ? 'VERTICAL' : 'HORIZONTAL';
+  let layoutMode: "NONE" | "HORIZONTAL" | "VERTICAL" = "HORIZONTAL"; // Default to horizontal for buttons
+
+  if (node.layout && node.layout.mode !== "none") {
+    layoutMode = node.layout.mode === "vertical" ? "VERTICAL" : "HORIZONTAL";
   }
-  
+
   const figmaNode: FigmaFrameNode = {
     id: node.id,
-    name: node.name || 'Button',
-    type: 'FRAME',
+    name: node.name || "Button",
+    type: "FRAME",
     visible: node.visible !== false,
     locked: node.locked || false,
     opacity: node.opacity ?? 1,
@@ -604,35 +692,35 @@ function convertButtonToFrame(
     y: node.y,
     width: node.width,
     height: node.height,
-    fills: convertFillsToFigma(node.fills),
+    fills: convertFillsToFigma(node.fills, options),
     strokes: convertStrokesToFigma(node.strokes),
     strokeWeight: node.strokes?.[0]?.width || 0,
-    strokeAlign: 'INSIDE',
-    cornerRadius: typeof node.cornerRadius === 'number' ? node.cornerRadius : 8,
+    strokeAlign: "INSIDE",
+    cornerRadius: typeof node.cornerRadius === "number" ? node.cornerRadius : 8,
     effects: convertEffectsToFigma(node.shadows, node.blur, node.backdropBlur),
     clipsContent: true,
     layoutMode: layoutMode,
-    primaryAxisSizingMode: 'AUTO',
-    counterAxisSizingMode: 'AUTO',
-    primaryAxisAlignItems: 'CENTER',
-    counterAxisAlignItems: 'CENTER',
+    primaryAxisSizingMode: "AUTO",
+    counterAxisSizingMode: "AUTO",
+    primaryAxisAlignItems: "CENTER",
+    counterAxisAlignItems: "CENTER",
     paddingLeft: node.layout?.padding?.left ?? 16,
     paddingRight: node.layout?.padding?.right ?? 16,
     paddingTop: node.layout?.padding?.top ?? 12,
     paddingBottom: node.layout?.padding?.bottom ?? 12,
     itemSpacing: node.layout?.gap ?? 8,
-    layoutPositioning: 'AUTO',
+    layoutPositioning: "AUTO",
     children,
   };
-  
+
   // Handle individual corner radii
-  if (typeof node.cornerRadius === 'object') {
+  if (typeof node.cornerRadius === "object") {
     figmaNode.topLeftRadius = node.cornerRadius.topLeft;
     figmaNode.topRightRadius = node.cornerRadius.topRight;
     figmaNode.bottomRightRadius = node.cornerRadius.bottomRight;
     figmaNode.bottomLeftRadius = node.cornerRadius.bottomLeft;
   }
-  
+
   return figmaNode;
 }
 
@@ -641,22 +729,22 @@ function convertButtonToFrame(
  */
 function convertGenericContainerToFrame(
   node: DesignNode,
-  options: FigmaExportOptions
+  options: FigmaExportOptions,
 ): FigmaFrameNode {
   const children: FigmaPluginNode[] = [];
   const nodeWithChildren = node as DesignNode & { children?: DesignNode[] };
-  
+
   for (const child of nodeWithChildren.children || []) {
     const figmaChild = convertNodeToFigma(child, options, false);
     if (figmaChild) {
       children.push(figmaChild);
     }
   }
-  
+
   return {
     id: node.id,
-    name: node.name || 'Container',
-    type: 'FRAME',
+    name: node.name || "Container",
+    type: "FRAME",
     visible: node.visible !== false,
     locked: node.locked || false,
     opacity: node.opacity ?? 1,
@@ -664,62 +752,72 @@ function convertGenericContainerToFrame(
     y: node.y,
     width: node.width,
     height: node.height,
-    fills: convertFillsToFigma(node.fills) || [],
+    fills: convertFillsToFigma(node.fills, options) || [],
     strokes: convertStrokesToFigma(node.strokes) || [],
     strokeWeight: node.strokes?.[0]?.width || 0,
-    strokeAlign: 'INSIDE',
-    cornerRadius: typeof node.cornerRadius === 'number' ? node.cornerRadius : 0,
+    strokeAlign: "INSIDE",
+    cornerRadius: typeof node.cornerRadius === "number" ? node.cornerRadius : 0,
     effects: convertEffectsToFigma(node.shadows, node.blur, node.backdropBlur),
     clipsContent: false,
-    layoutMode: 'NONE',
-    primaryAxisSizingMode: 'FIXED',
-    counterAxisSizingMode: 'FIXED',
-    primaryAxisAlignItems: 'MIN',
-    counterAxisAlignItems: 'MIN',
+    layoutMode: "NONE",
+    primaryAxisSizingMode: "FIXED",
+    counterAxisSizingMode: "FIXED",
+    primaryAxisAlignItems: "MIN",
+    counterAxisAlignItems: "MIN",
     paddingLeft: 0,
     paddingRight: 0,
     paddingTop: 0,
     paddingBottom: 0,
     itemSpacing: 0,
-    layoutPositioning: 'ABSOLUTE',
+    layoutPositioning: "ABSOLUTE",
     children,
   };
 }
 
-function convertTextToFigma(node: TextNode): FigmaTextNode {
+function convertTextToFigma(
+  node: TextNode,
+  options: FigmaExportOptions,
+): FigmaTextNode {
   const { textStyle } = node;
-  
-  const textAlignMap: Record<string, 'LEFT' | 'CENTER' | 'RIGHT' | 'JUSTIFIED'> = {
-    'left': 'LEFT',
-    'center': 'CENTER',
-    'right': 'RIGHT',
-    'justify': 'JUSTIFIED',
+
+  const textAlignMap: Record<
+    string,
+    "LEFT" | "CENTER" | "RIGHT" | "JUSTIFIED"
+  > = {
+    left: "LEFT",
+    center: "CENTER",
+    right: "RIGHT",
+    justify: "JUSTIFIED",
   };
-  
-  const textCaseMap: Record<string, 'ORIGINAL' | 'UPPER' | 'LOWER' | 'TITLE'> = {
-    'none': 'ORIGINAL',
-    'uppercase': 'UPPER',
-    'lowercase': 'LOWER',
-    'capitalize': 'TITLE',
+
+  const textCaseMap: Record<string, "ORIGINAL" | "UPPER" | "LOWER" | "TITLE"> =
+    {
+      none: "ORIGINAL",
+      uppercase: "UPPER",
+      lowercase: "LOWER",
+      capitalize: "TITLE",
+    };
+
+  const textDecorationMap: Record<
+    string,
+    "NONE" | "UNDERLINE" | "STRIKETHROUGH"
+  > = {
+    none: "NONE",
+    underline: "UNDERLINE",
+    "line-through": "STRIKETHROUGH",
   };
-  
-  const textDecorationMap: Record<string, 'NONE' | 'UNDERLINE' | 'STRIKETHROUGH'> = {
-    'none': 'NONE',
-    'underline': 'UNDERLINE',
-    'line-through': 'STRIKETHROUGH',
-  };
-  
+
   // Resolve font family
   let fontFamily = textStyle.fontFamily;
-  if (fontFamily.includes('var(')) {
+  if (fontFamily.includes("var(")) {
     fontFamily = resolveColor(fontFamily);
   }
-  fontFamily = fontFamily.replace(/['"]/g, '').split(',')[0].trim();
-  
+  fontFamily = fontFamily.replace(/['"]/g, "").split(",")[0].trim();
+
   return {
     id: node.id,
-    name: node.name || node.content.substring(0, 20) || 'Text',
-    type: 'TEXT',
+    name: node.name || node.content.substring(0, 20) || "Text",
+    type: "TEXT",
     visible: node.visible !== false,
     locked: node.locked || false,
     opacity: node.opacity ?? 1,
@@ -729,32 +827,41 @@ function convertTextToFigma(node: TextNode): FigmaTextNode {
     height: node.height,
     characters: node.content,
     style: {
-      fontFamily: fontFamily || 'Inter',
+      fontFamily: fontFamily || "Inter",
       fontSize: textStyle.fontSize,
       fontWeight: textStyle.fontWeight,
-      textAlignHorizontal: textAlignMap[textStyle.textAlign] || 'LEFT',
-      textAlignVertical: 'TOP',
+      textAlignHorizontal: textAlignMap[textStyle.textAlign] || "LEFT",
+      textAlignVertical: "TOP",
       letterSpacing: textStyle.letterSpacing,
-      lineHeightPx: typeof textStyle.lineHeight === 'number'
-        ? textStyle.lineHeight * textStyle.fontSize
-        : textStyle.fontSize * 1.2,
-      textCase: textCaseMap[textStyle.textTransform] || 'ORIGINAL',
-      textDecoration: textDecorationMap[textStyle.textDecoration] || 'NONE',
+      lineHeightPx:
+        typeof textStyle.lineHeight === "number"
+          ? textStyle.lineHeight * textStyle.fontSize
+          : textStyle.fontSize * 1.2,
+      textCase: textCaseMap[textStyle.textTransform] || "ORIGINAL",
+      textDecoration: textDecorationMap[textStyle.textDecoration] || "NONE",
     },
-    fills: convertFillsToFigma(node.fills),
+    fills: convertFillsToFigma(node.fills, options),
     effects: convertEffectsToFigma(node.shadows),
-    textAutoResize: node.autoWidth && node.autoHeight ? 'WIDTH_AND_HEIGHT' : 
-                    node.autoHeight ? 'HEIGHT' : 'NONE',
-    layoutAlign: 'INHERIT',
+    textAutoResize:
+      node.autoWidth && node.autoHeight
+        ? "WIDTH_AND_HEIGHT"
+        : node.autoHeight
+          ? "HEIGHT"
+          : "NONE",
+    layoutAlign: "INHERIT",
     layoutGrow: 0,
   };
 }
 
-function convertImageToFigma(node: ImageNode): FigmaRectangleNode {
+function convertImageToFigma(
+  node: ImageNode,
+  options: FigmaExportOptions,
+): FigmaRectangleNode {
+  const base64 = options.embeddedImages?.[node.src];
   return {
     id: node.id,
-    name: node.name || 'Image',
-    type: 'RECTANGLE',
+    name: node.name || "Image",
+    type: "RECTANGLE",
     visible: node.visible !== false,
     locked: node.locked || false,
     opacity: node.opacity ?? 1,
@@ -762,28 +869,60 @@ function convertImageToFigma(node: ImageNode): FigmaRectangleNode {
     y: node.y,
     width: node.width,
     height: node.height,
-    fills: [{
-      type: 'IMAGE',
-      visible: true,
-      scaleMode: node.objectFit === 'contain' ? 'FIT' : 'FILL',
-      imageHash: node.src,
-    }],
+    fills: [
+      {
+        type: "IMAGE",
+        visible: true,
+        scaleMode: node.objectFit === "contain" ? "FIT" : "FILL",
+        ...(base64 ? { imageBase64: base64 } : { imageHash: node.src }),
+      },
+    ],
     strokes: [],
     strokeWeight: 0,
-    cornerRadius: typeof node.cornerRadius === 'number' ? node.cornerRadius : 0,
+    cornerRadius: typeof node.cornerRadius === "number" ? node.cornerRadius : 0,
     effects: convertEffectsToFigma(node.shadows),
-    layoutAlign: 'INHERIT',
+    layoutAlign: "INHERIT",
     layoutGrow: 0,
   };
 }
 
-function convertIconToFigma(node: IconNode, options: FigmaExportOptions): FigmaRectangleNode {
-  const iconColor = node.color ? resolveColor(node.color) : '#666666';
-  
+function convertIconToFigma(
+  node: IconNode,
+  options: FigmaExportOptions,
+): FigmaVectorNode | FigmaRectangleNode {
+  const iconColor = node.color ? resolveColor(node.color) : "#666666";
+  const fillColor = hexToFigmaColor(iconColor);
+  const vectorPaths = node.svgPathData?.length
+    ? node.svgPathData.map((data) => ({
+        windingRule: "NONZERO" as const,
+        data,
+      }))
+    : null;
+
+  if (vectorPaths && vectorPaths.length > 0) {
+    return {
+      id: node.id,
+      name: `Icon: ${node.iconLibrary || "hugeicons"}:${node.iconName}`,
+      type: "VECTOR",
+      visible: node.visible !== false,
+      locked: node.locked || false,
+      opacity: node.opacity ?? 1,
+      x: node.x,
+      y: node.y,
+      width: node.width,
+      height: node.height,
+      fills: [{ type: "SOLID", color: fillColor, opacity: 1, visible: true }],
+      strokes: [],
+      strokeWeight: 0,
+      effects: [],
+      vectorPaths,
+    };
+  }
+
   return {
     id: node.id,
-    name: `Icon: ${node.iconLibrary || 'hugeicons'}:${node.iconName}`,
-    type: 'RECTANGLE',
+    name: `Icon: ${node.iconLibrary || "hugeicons"}:${node.iconName}`,
+    type: "RECTANGLE",
     visible: node.visible !== false,
     locked: node.locked || false,
     opacity: node.opacity ?? 1,
@@ -791,31 +930,70 @@ function convertIconToFigma(node: IconNode, options: FigmaExportOptions): FigmaR
     y: node.y,
     width: node.width,
     height: node.height,
-    fills: [{
-      type: 'SOLID',
-      color: hexToFigmaColor(iconColor),
-      opacity: 0.2,
-      visible: true,
-
-    }],
-    strokes: [{
-      type: 'SOLID',
-      color: hexToFigmaColor(iconColor),
-      opacity: 1,
-    }],
+    fills: [{ type: "SOLID", color: fillColor, opacity: 0.2, visible: true }],
+    strokes: [{ type: "SOLID", color: fillColor, opacity: 1 }],
     strokeWeight: 1,
     cornerRadius: 4,
     effects: [],
-    layoutAlign: 'INHERIT',
+    layoutAlign: "INHERIT",
     layoutGrow: 0,
   };
+}
+
+/** Extract path d attributes from SVG markup for Figma VECTOR */
+function extractPathDataFromSvgContent(
+  svgContent: string,
+): { windingRule: "NONZERO" | "EVENODD"; data: string }[] {
+  const paths: { windingRule: "NONZERO" | "EVENODD"; data: string }[] = [];
+  const dMatches = svgContent.matchAll(/<path[^>]*\sd=["']([^"']+)["']/gi);
+  for (const m of dMatches) {
+    if (m[1]?.trim()) paths.push({ windingRule: "NONZERO", data: m[1].trim() });
+  }
+  const fillRuleMatch = svgContent.match(/fill-rule\s*:\s*(evenodd|nonzero)/i);
+  if (fillRuleMatch?.[1]?.toLowerCase() === "evenodd" && paths.length > 0) {
+    paths[paths.length - 1].windingRule = "EVENODD";
+  }
+  return paths.length > 0 ? paths : [];
+}
+
+function convertSvgToFigma(
+  node: SvgNode,
+  options: FigmaExportOptions,
+): FigmaVectorNode | FigmaRectangleNode {
+  const vectorPaths = extractPathDataFromSvgContent(node.svgContent || "");
+  const fillColor = { r: 0.2, g: 0.2, b: 0.2, a: 1 };
+  if (vectorPaths.length > 0) {
+    return {
+      id: node.id,
+      name: node.name || "Vector",
+      type: "VECTOR",
+      visible: node.visible !== false,
+      locked: node.locked || false,
+      opacity: node.opacity ?? 1,
+      x: node.x,
+      y: node.y,
+      width: node.width,
+      height: node.height,
+      fills: node.fills?.length
+        ? convertFillsToFigma(node.fills, options)
+        : [{ type: "SOLID", color: fillColor, opacity: 1, visible: true }],
+      strokes: convertStrokesToFigma(node.strokes),
+      strokeWeight: node.strokes?.[0]?.width || 0,
+      effects: convertEffectsToFigma(node.shadows),
+      vectorPaths,
+    };
+  }
+  return convertRectangleToFigma(
+    { ...node, type: "rectangle" } as RectangleNode,
+    options,
+  );
 }
 
 function convertInputToFigma(node: InputNode): FigmaFrameNode {
   const textNode: FigmaTextNode = {
     id: `${node.id}-placeholder`,
-    name: 'Placeholder',
-    type: 'TEXT',
+    name: "Placeholder",
+    type: "TEXT",
     visible: true,
     locked: false,
     opacity: 1,
@@ -823,30 +1001,32 @@ function convertInputToFigma(node: InputNode): FigmaFrameNode {
     y: 0,
     width: node.width - 24,
     height: node.height,
-    characters: node.placeholder || '',
+    characters: node.placeholder || "",
     style: {
-      fontFamily: 'Inter',
+      fontFamily: "Inter",
       fontSize: 14,
       fontWeight: 400,
-      textAlignHorizontal: 'LEFT',
-      textAlignVertical: 'CENTER',
+      textAlignHorizontal: "LEFT",
+      textAlignVertical: "CENTER",
       letterSpacing: 0,
     },
-    fills: [{
-      type: 'SOLID',
-      color: { r: 0.6, g: 0.6, b: 0.6, a: 1 },
-      visible: true,
-    }],
+    fills: [
+      {
+        type: "SOLID",
+        color: { r: 0.6, g: 0.6, b: 0.6, a: 1 },
+        visible: true,
+      },
+    ],
     effects: [],
-    textAutoResize: 'NONE',
-    layoutAlign: 'INHERIT',
+    textAutoResize: "NONE",
+    layoutAlign: "INHERIT",
     layoutGrow: 1,
   };
-  
+
   return {
     id: node.id,
-    name: node.name || 'Input',
-    type: 'FRAME',
+    name: node.name || "Input",
+    type: "FRAME",
     visible: node.visible !== false,
     locked: node.locked || false,
     opacity: node.opacity ?? 1,
@@ -854,40 +1034,47 @@ function convertInputToFigma(node: InputNode): FigmaFrameNode {
     y: node.y,
     width: node.width,
     height: node.height,
-    fills: convertFillsToFigma(node.fills) || [{
-      type: 'SOLID',
-      color: { r: 1, g: 1, b: 1, a: 1 },
-      visible: true,
-    }],
-    strokes: convertStrokesToFigma(node.strokes) || [{
-      type: 'SOLID',
-      color: { r: 0.8, g: 0.8, b: 0.8, a: 1 },
-    }],
+    fills: convertFillsToFigma(node.fills, options) || [
+      {
+        type: "SOLID",
+        color: { r: 1, g: 1, b: 1, a: 1 },
+        visible: true,
+      },
+    ],
+    strokes: convertStrokesToFigma(node.strokes) || [
+      {
+        type: "SOLID",
+        color: { r: 0.8, g: 0.8, b: 0.8, a: 1 },
+      },
+    ],
     strokeWeight: 1,
-    strokeAlign: 'INSIDE',
-    cornerRadius: typeof node.cornerRadius === 'number' ? node.cornerRadius : 8,
+    strokeAlign: "INSIDE",
+    cornerRadius: typeof node.cornerRadius === "number" ? node.cornerRadius : 8,
     effects: [],
     clipsContent: true,
-    layoutMode: 'HORIZONTAL',
-    primaryAxisSizingMode: 'FIXED',
-    counterAxisSizingMode: 'FIXED',
-    primaryAxisAlignItems: 'MIN',
-    counterAxisAlignItems: 'CENTER',
+    layoutMode: "HORIZONTAL",
+    primaryAxisSizingMode: "FIXED",
+    counterAxisSizingMode: "FIXED",
+    primaryAxisAlignItems: "MIN",
+    counterAxisAlignItems: "CENTER",
     paddingLeft: 12,
     paddingRight: 12,
     paddingTop: 0,
     paddingBottom: 0,
     itemSpacing: 0,
-    layoutPositioning: 'AUTO',
+    layoutPositioning: "AUTO",
     children: [textNode],
   };
 }
 
-function convertRectangleToFigma(node: RectangleNode): FigmaRectangleNode {
+function convertRectangleToFigma(
+  node: RectangleNode,
+  options: FigmaExportOptions,
+): FigmaRectangleNode {
   const figmaNode: FigmaRectangleNode = {
     id: node.id,
-    name: node.name || 'Rectangle',
-    type: 'RECTANGLE',
+    name: node.name || "Rectangle",
+    type: "RECTANGLE",
     visible: node.visible !== false,
     locked: node.locked || false,
     opacity: node.opacity ?? 1,
@@ -895,22 +1082,22 @@ function convertRectangleToFigma(node: RectangleNode): FigmaRectangleNode {
     y: node.y,
     width: node.width,
     height: node.height,
-    fills: convertFillsToFigma(node.fills),
+    fills: convertFillsToFigma(node.fills, options),
     strokes: convertStrokesToFigma(node.strokes),
     strokeWeight: node.strokes?.[0]?.width || 0,
-    cornerRadius: typeof node.cornerRadius === 'number' ? node.cornerRadius : 0,
+    cornerRadius: typeof node.cornerRadius === "number" ? node.cornerRadius : 0,
     effects: convertEffectsToFigma(node.shadows),
-    layoutAlign: 'INHERIT',
+    layoutAlign: "INHERIT",
     layoutGrow: 0,
   };
-  
-  if (typeof node.cornerRadius === 'object') {
+
+  if (typeof node.cornerRadius === "object") {
     figmaNode.topLeftRadius = node.cornerRadius.topLeft;
     figmaNode.topRightRadius = node.cornerRadius.topRight;
     figmaNode.bottomRightRadius = node.cornerRadius.bottomRight;
     figmaNode.bottomLeftRadius = node.cornerRadius.bottomLeft;
   }
-  
+
   return figmaNode;
 }
 
@@ -918,41 +1105,50 @@ function convertRectangleToFigma(node: RectangleNode): FigmaRectangleNode {
 // STYLE CONVERTERS
 // ============================================================================
 
-function convertFillsToFigma(fills?: Fill[]): FigmaPaint[] {
+function convertFillsToFigma(
+  fills?: Fill[],
+  options?: FigmaExportOptions,
+): FigmaPaint[] {
   if (!fills || fills.length === 0) return [];
-  
-  return fills.map(fill => {
+
+  return fills.map((fill) => {
     switch (fill.type) {
-      case 'solid':
-        const color = resolveColor(fill.color || '#000000');
+      case "solid":
+        const color = resolveColor(fill.color || "#000000");
         return {
-          type: 'SOLID' as const,
+          type: "SOLID" as const,
           color: hexToFigmaColor(color),
           opacity: fill.opacity ?? 1,
           visible: true,
         };
-      
-      case 'gradient':
+
+      case "gradient":
         return {
-          type: 'GRADIENT_LINEAR' as const,
-          gradientStops: fill.gradientStops?.map(stop => ({
-            color: hexToFigmaColor(resolveColor(stop.color)),
-            position: stop.position,
-          })) || [],
+          type: "GRADIENT_LINEAR" as const,
+          gradientStops:
+            fill.gradientStops?.map((stop) => ({
+              color: hexToFigmaColor(resolveColor(stop.color)),
+              position: stop.position,
+            })) || [],
           visible: true,
         };
-      
-      case 'image':
+
+      case "image": {
+        const imageUrl = fill.imageUrl;
+        const base64 = imageUrl
+          ? options?.embeddedImages?.[imageUrl]
+          : undefined;
         return {
-          type: 'IMAGE' as const,
-          scaleMode: (fill.imageScaleMode?.toUpperCase() || 'FILL'),
-          imageHash: fill.imageUrl,
+          type: "IMAGE" as const,
+          scaleMode: fill.imageScaleMode?.toUpperCase() || "FILL",
+          ...(base64 ? { imageBase64: base64 } : { imageHash: imageUrl }),
           visible: true,
         };
-      
+      }
+
       default:
         return {
-          type: 'SOLID' as const,
+          type: "SOLID" as const,
           color: { r: 0, g: 0, b: 0, a: 0 },
           visible: false,
         };
@@ -962,9 +1158,9 @@ function convertFillsToFigma(fills?: Fill[]): FigmaPaint[] {
 
 function convertStrokesToFigma(strokes?: Stroke[]): FigmaPaint[] {
   if (!strokes || strokes.length === 0) return [];
-  
-  return strokes.map(stroke => ({
-    type: 'SOLID' as const,
+
+  return strokes.map((stroke) => ({
+    type: "SOLID" as const,
     color: hexToFigmaColor(resolveColor(stroke.color)),
     opacity: 1,
   }));
@@ -973,14 +1169,14 @@ function convertStrokesToFigma(strokes?: Stroke[]): FigmaPaint[] {
 function convertEffectsToFigma(
   shadows?: Shadow[],
   blur?: number,
-  backdropBlur?: number
+  backdropBlur?: number,
 ): FigmaEffect[] {
   const effects: FigmaEffect[] = [];
-  
+
   if (shadows) {
     for (const shadow of shadows) {
       effects.push({
-        type: shadow.type === 'inner' ? 'INNER_SHADOW' : 'DROP_SHADOW',
+        type: shadow.type === "inner" ? "INNER_SHADOW" : "DROP_SHADOW",
         visible: true,
         radius: shadow.blur,
         color: hexToFigmaColor(resolveColor(shadow.color)),
@@ -989,23 +1185,23 @@ function convertEffectsToFigma(
       });
     }
   }
-  
+
   if (blur) {
     effects.push({
-      type: 'LAYER_BLUR',
+      type: "LAYER_BLUR",
       visible: true,
       radius: blur,
     });
   }
-  
+
   if (backdropBlur) {
     effects.push({
-      type: 'BACKGROUND_BLUR',
+      type: "BACKGROUND_BLUR",
       visible: true,
       radius: backdropBlur,
     });
   }
-  
+
   return effects;
 }
 
@@ -1015,13 +1211,15 @@ function convertEffectsToFigma(
 
 function hexToFigmaColor(color: string): FigmaColor {
   // Handle special cases
-  if (color === 'transparent' || color === 'none') {
+  if (color === "transparent" || color === "none") {
     return { r: 0, g: 0, b: 0, a: 0 };
   }
-  
+
   // Handle rgb/rgba
-  if (color.startsWith('rgb')) {
-    const match = color.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/);
+  if (color.startsWith("rgb")) {
+    const match = color.match(
+      /rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*([\d.]+))?\)/,
+    );
     if (match) {
       return {
         r: parseInt(match[1]) / 255,
@@ -1031,27 +1229,35 @@ function hexToFigmaColor(color: string): FigmaColor {
       };
     }
   }
-  
+
   // Handle hex
-  let hex = color.replace('#', '');
-  
+  let hex = color.replace("#", "");
+
   // Shorthand hex
   if (hex.length === 3) {
-    hex = hex.split('').map(c => c + c).join('');
+    hex = hex
+      .split("")
+      .map((c) => c + c)
+      .join("");
   }
-  
+
   // 8-digit hex (with alpha)
   let alpha = 1;
   if (hex.length === 8) {
     alpha = parseInt(hex.slice(6, 8), 16) / 255;
     hex = hex.slice(0, 6);
   }
-  
+
   const r = parseInt(hex.slice(0, 2), 16) / 255;
   const g = parseInt(hex.slice(2, 4), 16) / 255;
   const b = parseInt(hex.slice(4, 6), 16) / 255;
-  
-  return { r: isNaN(r) ? 0 : r, g: isNaN(g) ? 0 : g, b: isNaN(b) ? 0 : b, a: alpha };
+
+  return {
+    r: isNaN(r) ? 0 : r,
+    g: isNaN(g) ? 0 : g,
+    b: isNaN(b) ? 0 : b,
+    a: alpha,
+  };
 }
 
 export function parseColorToFigma(color: string): FigmaColor {

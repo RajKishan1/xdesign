@@ -1,6 +1,6 @@
 /**
  * HTML to Design Tree Parser - IMPROVED VERSION
- * 
+ *
  * Accurately converts HTML DOM elements into a structured Design Tree.
  * This version captures actual rendered positions, styles, and creates
  * proper nested frame hierarchy.
@@ -16,6 +16,7 @@ import {
   ButtonNode,
   InputNode,
   RectangleNode,
+  SvgNode,
   Fill,
   Stroke,
   Shadow,
@@ -26,7 +27,7 @@ import {
   LayoutJustify,
   generateNodeId,
   createFrameNode,
-} from '@/types/design-tree';
+} from "@/types/design-tree";
 
 // ============================================================================
 // MAIN PARSER FUNCTION
@@ -45,60 +46,72 @@ export interface ParseOptions {
  */
 export function parseHtmlToDesignTree(
   rootElement: Element,
-  options: ParseOptions
+  options: ParseOptions,
 ): DesignTree {
   // Get the root's bounding rect for offset calculation
   const rootRect = rootElement.getBoundingClientRect();
-  
+
   // Find the first meaningful child if root is body with no styles
   let actualRoot = rootElement;
   const doc = rootElement.ownerDocument;
   const win = doc.defaultView;
-  
-  if (win && rootElement.tagName.toLowerCase() === 'body') {
+
+  if (win && rootElement.tagName.toLowerCase() === "body") {
     const bodyStyles = win.getComputedStyle(rootElement);
     const firstChild = rootElement.children[0];
-    
+
     // If body has no background and first child has one, use first child as root
-    if (firstChild && 
-        (bodyStyles.backgroundColor === 'rgba(0, 0, 0, 0)' || bodyStyles.backgroundColor === 'transparent') &&
-        firstChild.children.length > 0) {
+    if (
+      firstChild &&
+      (bodyStyles.backgroundColor === "rgba(0, 0, 0, 0)" ||
+        bodyStyles.backgroundColor === "transparent") &&
+      firstChild.children.length > 0
+    ) {
       const firstChildStyles = win.getComputedStyle(firstChild);
-      if (firstChildStyles.backgroundColor !== 'rgba(0, 0, 0, 0)' && 
-          firstChildStyles.backgroundColor !== 'transparent') {
+      if (
+        firstChildStyles.backgroundColor !== "rgba(0, 0, 0, 0)" &&
+        firstChildStyles.backgroundColor !== "transparent"
+      ) {
         actualRoot = firstChild;
       }
     }
   }
-  
+
   const actualRootRect = actualRoot.getBoundingClientRect();
-  const rootNode = parseElement(actualRoot, null, actualRootRect.left, actualRootRect.top, 0);
-  
+  const rootNode = parseElement(
+    actualRoot,
+    null,
+    actualRootRect.left,
+    actualRootRect.top,
+    0,
+  );
+
   if (!rootNode) {
-    throw new Error('Failed to parse root element');
+    throw new Error("Failed to parse root element");
   }
 
   // Ensure root is a frame
-  const root: FrameNode = rootNode.type === 'frame' 
-    ? rootNode as FrameNode
-    : {
-        ...createFrameNode(),
-        id: generateNodeId(),
-        name: options.frameName,
-        x: 0,
-        y: 0,
-        width: options.frameWidth,
-        height: options.frameHeight,
-        children: [rootNode],
-      };
+  const root: FrameNode =
+    rootNode.type === "frame"
+      ? (rootNode as FrameNode)
+      : {
+          ...createFrameNode(),
+          id: generateNodeId(),
+          name: options.frameName,
+          x: 0,
+          y: 0,
+          width: options.frameWidth,
+          height: options.frameHeight,
+          children: [rootNode],
+        };
 
   // Set root position to 0,0
   root.x = 0;
   root.y = 0;
   root.width = options.frameWidth;
-  
-  // Use actual content height
-  const contentHeight = Math.round(actualRootRect.height);
+
+  // Use actual content height (2-decimal precision for accurate export)
+  const contentHeight = round2(actualRootRect.height);
   root.height = Math.max(options.frameHeight, contentHeight);
 
   // If root doesn't have a background fill but should have one, add default
@@ -107,8 +120,12 @@ export function parseHtmlToDesignTree(
     if (win) {
       const rootStyles = win.getComputedStyle(actualRoot);
       const bgColor = rootStyles.backgroundColor;
-      if (bgColor && bgColor !== 'rgba(0, 0, 0, 0)' && bgColor !== 'transparent') {
-        root.fills = [{ type: 'solid', color: bgColor, opacity: 1 }];
+      if (
+        bgColor &&
+        bgColor !== "rgba(0, 0, 0, 0)" &&
+        bgColor !== "transparent"
+      ) {
+        root.fills = [{ type: "solid", color: bgColor, opacity: 1 }];
       }
     }
   }
@@ -128,7 +145,7 @@ export function parseHtmlToDesignTree(
 
 /**
  * Parse a single DOM element into a DesignNode
- * 
+ *
  * IMPORTANT: Positions are stored RELATIVE to root (absolute coordinates)
  * This makes SVG rendering simpler - just use x,y directly
  */
@@ -137,17 +154,44 @@ function parseElement(
   parent: Element | null,
   rootOffsetX: number,
   rootOffsetY: number,
-  depth: number
+  depth: number,
 ): DesignNode | null {
   const tagName = element.tagName.toLowerCase();
-  
+
   // Skip non-visual elements
-  if (['script', 'style', 'meta', 'link', 'head', 'noscript', 'br'].includes(tagName)) {
+  if (
+    ["script", "style", "meta", "link", "head", "noscript", "br"].includes(
+      tagName,
+    )
+  ) {
     return null;
   }
-  
+
   // Skip SVG internal elements (they're rendered as part of parent SVG)
-  const svgInternalTags = ['circle', 'path', 'rect', 'line', 'polygon', 'polyline', 'ellipse', 'g', 'defs', 'clippath', 'mask', 'use', 'tspan', 'foreignobject', 'lineargradient', 'radialgradient', 'stop', 'filter', 'fegaussianblur', 'feoffset', 'feblend', 'fedropshadow'];
+  const svgInternalTags = [
+    "circle",
+    "path",
+    "rect",
+    "line",
+    "polygon",
+    "polyline",
+    "ellipse",
+    "g",
+    "defs",
+    "clippath",
+    "mask",
+    "use",
+    "tspan",
+    "foreignobject",
+    "lineargradient",
+    "radialgradient",
+    "stop",
+    "filter",
+    "fegaussianblur",
+    "feoffset",
+    "feblend",
+    "fedropshadow",
+  ];
   if (svgInternalTags.includes(tagName)) {
     return null;
   }
@@ -160,15 +204,20 @@ function parseElement(
   // Get computed styles
   const styles = win.getComputedStyle(element);
   const rect = element.getBoundingClientRect();
-  
+
   // Skip invisible elements
-  if (styles.display === 'none' || styles.visibility === 'hidden' || styles.opacity === '0') {
+  if (
+    styles.display === "none" ||
+    styles.visibility === "hidden" ||
+    styles.opacity === "0"
+  ) {
     return null;
   }
-  
+
   // Skip elements with no dimensions (but allow very small ones)
   // Exception: iconify-icon elements might report 0 dimensions before render
-  const isIconElement = tagName === 'iconify-icon' || element.classList.contains('iconify');
+  const isIconElement =
+    tagName === "iconify-icon" || element.classList.contains("iconify");
   if (rect.width <= 0 && rect.height <= 0 && !isIconElement) {
     return null;
   }
@@ -180,30 +229,46 @@ function parseElement(
 
   // Determine node type based on element
   const nodeType = determineNodeType(element, tagName, styles);
-  
+
   // Build base node properties with ABSOLUTE coordinates
   const baseProps = buildBaseNodeProps(element, styles, rect, x, y);
 
   // Special handling for SVG elements
-  if (tagName === 'svg') {
+  if (tagName === "svg") {
     return buildSvgNode(element, styles, baseProps);
   }
 
   // Create specific node type
   switch (nodeType) {
-    case 'text':
+    case "text":
       return buildTextNode(element, styles, baseProps, win);
-    case 'image':
+    case "image":
       return buildImageNode(element as HTMLImageElement, styles, baseProps);
-    case 'icon':
+    case "icon":
       return buildIconNode(element, styles, baseProps);
-    case 'button':
-      return buildContainerNode(element, styles, baseProps, rootOffsetX, rootOffsetY, depth, 'button');
-    case 'input':
+    case "button":
+      return buildContainerNode(
+        element,
+        styles,
+        baseProps,
+        rootOffsetX,
+        rootOffsetY,
+        depth,
+        "button",
+      );
+    case "input":
       return buildInputNode(element as HTMLInputElement, styles, baseProps);
-    case 'frame':
+    case "frame":
     default:
-      return buildContainerNode(element, styles, baseProps, rootOffsetX, rootOffsetY, depth, 'frame');
+      return buildContainerNode(
+        element,
+        styles,
+        baseProps,
+        rootOffsetX,
+        rootOffsetY,
+        depth,
+        "frame",
+      );
   }
 }
 
@@ -211,83 +276,133 @@ function parseElement(
 // NODE TYPE DETECTION - IMPROVED
 // ============================================================================
 
-function determineNodeType(element: Element, tagName: string, styles: CSSStyleDeclaration): DesignNode['type'] {
+function determineNodeType(
+  element: Element,
+  tagName: string,
+  styles: CSSStyleDeclaration,
+): DesignNode["type"] {
   // Iconify icons
-  if (tagName === 'iconify-icon' || element.classList.contains('iconify')) {
-    return 'icon';
+  if (tagName === "iconify-icon" || element.classList.contains("iconify")) {
+    return "icon";
   }
-  
-  // SVG elements - treat as frame (they'll render their visual appearance via fills)
-  if (tagName === 'svg') {
-    return 'frame';
+
+  // SVG elements - parsed as svg node (buildSvgNode) via early return in parseElement
+  if (tagName === "svg") {
+    return "svg";
   }
-  
+
   // SVG child elements (circles, paths, etc.) - skip them, they're part of the SVG visual
-  if (['circle', 'path', 'rect', 'line', 'polygon', 'polyline', 'ellipse', 'g', 'defs', 'clippath', 'mask', 'use', 'text', 'tspan'].includes(tagName)) {
+  if (
+    [
+      "circle",
+      "path",
+      "rect",
+      "line",
+      "polygon",
+      "polyline",
+      "ellipse",
+      "g",
+      "defs",
+      "clippath",
+      "mask",
+      "use",
+      "text",
+      "tspan",
+    ].includes(tagName)
+  ) {
     // These are handled as part of SVG parent
-    return 'frame';
+    return "frame";
   }
-  
+
   // Images
-  if (tagName === 'img' || tagName === 'picture') {
-    return 'image';
+  if (tagName === "img" || tagName === "picture") {
+    return "image";
   }
-  
+
   // Buttons
-  if (tagName === 'button' || element.getAttribute('role') === 'button') {
-    return 'button';
+  if (tagName === "button" || element.getAttribute("role") === "button") {
+    return "button";
   }
-  
+
   // Links that look like buttons
-  if (tagName === 'a' && element.classList.toString().includes('btn')) {
-    return 'button';
+  if (tagName === "a" && element.classList.toString().includes("btn")) {
+    return "button";
   }
-  
+
   // Interactive links (nav items)
-  if (tagName === 'a' && element.classList.toString().includes('nav')) {
-    return 'button';
+  if (tagName === "a" && element.classList.toString().includes("nav")) {
+    return "button";
   }
-  
+
   // Inputs
-  if (tagName === 'input' || tagName === 'textarea') {
-    return 'input';
+  if (tagName === "input" || tagName === "textarea") {
+    return "input";
   }
-  
+
   // Check if element is a text-only node
   const childElements = Array.from(element.children);
   const hasText = element.textContent?.trim();
-  
+
   // Pure text elements (no child elements, only text content)
   if (childElements.length === 0 && hasText) {
-    return 'text';
+    return "text";
   }
-  
+
   // Inline text elements with only text or inline children
-  const inlineTags = ['span', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'label', 'strong', 'em', 'b', 'i', 'small', 'a'];
+  const inlineTags = [
+    "span",
+    "p",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "label",
+    "strong",
+    "em",
+    "b",
+    "i",
+    "small",
+    "a",
+  ];
   if (inlineTags.includes(tagName)) {
-    const hasOnlyTextOrInline = childElements.every(child => {
+    const hasOnlyTextOrInline = childElements.every((child) => {
       const childTag = child.tagName.toLowerCase();
-      return inlineTags.includes(childTag) || childTag === 'iconify-icon' || childTag === 'svg';
+      return (
+        inlineTags.includes(childTag) ||
+        childTag === "iconify-icon" ||
+        childTag === "svg"
+      );
     });
-    
+
     // If it has only inline/text children and actual text, treat as text
     // Unless it has significant background/border styling
     if (hasOnlyTextOrInline && hasText) {
-      const hasBg = styles.backgroundColor !== 'rgba(0, 0, 0, 0)' && styles.backgroundColor !== 'transparent';
+      const hasBg =
+        styles.backgroundColor !== "rgba(0, 0, 0, 0)" &&
+        styles.backgroundColor !== "transparent";
       const hasBorder = parseFloat(styles.borderWidth) > 0;
-      const hasPadding = parseFloat(styles.paddingTop) > 8 || parseFloat(styles.paddingBottom) > 8;
-      
+      const hasPadding =
+        parseFloat(styles.paddingTop) > 8 ||
+        parseFloat(styles.paddingBottom) > 8;
+
       // If it looks like a styled container, treat as frame
       if (hasBg || hasBorder || hasPadding) {
-        return 'frame';
+        return "frame";
       }
-      
-      return 'text';
+
+      return "text";
     }
   }
-  
+
   // Default to frame (container)
-  return 'frame';
+  return "frame";
+}
+
+/** Round to 2 decimals for sub-pixel accuracy in export (no integer rounding drift) */
+function round2(n: number): number {
+  return Math.round(n * 100) / 100;
 }
 
 // ============================================================================
@@ -307,7 +422,14 @@ interface BaseNodeProps {
   fills?: Fill[];
   strokes?: Stroke[];
   shadows?: Shadow[];
-  cornerRadius?: number | { topLeft: number; topRight: number; bottomRight: number; bottomLeft: number };
+  cornerRadius?:
+    | number
+    | {
+        topLeft: number;
+        topRight: number;
+        bottomRight: number;
+        bottomLeft: number;
+      };
   cssClasses?: string[];
   blur?: number;
   backdropBlur?: number;
@@ -318,21 +440,22 @@ function buildBaseNodeProps(
   styles: CSSStyleDeclaration,
   rect: DOMRect,
   x: number,
-  y: number
+  y: number,
 ): BaseNodeProps {
   const id = element.id || generateNodeId();
   const name = getElementName(element, styles);
-  
-  const width = Math.round(rect.width);
-  const height = Math.round(rect.height);
-  
+
+  // Use 2-decimal precision for accurate export (no integer rounding drift)
+  const width = round2(rect.width);
+  const height = round2(rect.height);
+
   return {
     id,
     name,
     visible: true,
     locked: false,
-    x: Math.round(x),
-    y: Math.round(y),
+    x: round2(x),
+    y: round2(y),
     width,
     height,
     opacity: parseFloat(styles.opacity) || 1,
@@ -340,7 +463,9 @@ function buildBaseNodeProps(
     strokes: parseStrokes(styles),
     shadows: parseShadows(styles),
     cornerRadius: parseBorderRadius(styles, width, height),
-    cssClasses: element.className ? element.className.toString().split(/\s+/).filter(Boolean) : undefined,
+    cssClasses: element.className
+      ? element.className.toString().split(/\s+/).filter(Boolean)
+      : undefined,
     blur: parseBlur(styles),
     backdropBlur: parseBackdropBlur(styles),
   };
@@ -349,73 +474,73 @@ function buildBaseNodeProps(
 function getElementName(element: Element, styles: CSSStyleDeclaration): string {
   // Use ID if available
   if (element.id) return element.id;
-  
+
   const tagName = element.tagName.toLowerCase();
   const classes = element.className.toString();
-  
+
   // Check for semantic elements
   const semanticTags: Record<string, string> = {
-    'header': 'Header',
-    'footer': 'Footer',
-    'nav': 'Navigation',
-    'main': 'Main Content',
-    'aside': 'Sidebar',
-    'section': 'Section',
-    'article': 'Article',
-    'button': 'Button',
-    'input': 'Input',
-    'img': 'Image',
-    'h1': 'Heading 1',
-    'h2': 'Heading 2',
-    'h3': 'Heading 3',
-    'p': 'Paragraph',
-    'a': 'Link',
+    header: "Header",
+    footer: "Footer",
+    nav: "Navigation",
+    main: "Main Content",
+    aside: "Sidebar",
+    section: "Section",
+    article: "Article",
+    button: "Button",
+    input: "Input",
+    img: "Image",
+    h1: "Heading 1",
+    h2: "Heading 2",
+    h3: "Heading 3",
+    p: "Paragraph",
+    a: "Link",
   };
-  
+
   if (semanticTags[tagName]) {
     return semanticTags[tagName];
   }
-  
+
   // Look for semantic class names
   const semanticPatterns = [
-    { pattern: /header/i, name: 'Header' },
-    { pattern: /footer/i, name: 'Footer' },
-    { pattern: /nav|navigation|menu/i, name: 'Navigation' },
-    { pattern: /sidebar/i, name: 'Sidebar' },
-    { pattern: /modal|dialog/i, name: 'Modal' },
-    { pattern: /card/i, name: 'Card' },
-    { pattern: /btn|button/i, name: 'Button' },
-    { pattern: /input|field/i, name: 'Input' },
-    { pattern: /avatar/i, name: 'Avatar' },
-    { pattern: /icon/i, name: 'Icon' },
-    { pattern: /badge|tag|chip/i, name: 'Badge' },
-    { pattern: /title|heading/i, name: 'Title' },
-    { pattern: /subtitle|subheading/i, name: 'Subtitle' },
-    { pattern: /description|text/i, name: 'Text' },
-    { pattern: /container|wrapper/i, name: 'Container' },
-    { pattern: /content/i, name: 'Content' },
-    { pattern: /list/i, name: 'List' },
-    { pattern: /item/i, name: 'Item' },
-    { pattern: /row/i, name: 'Row' },
-    { pattern: /column|col/i, name: 'Column' },
-    { pattern: /grid/i, name: 'Grid' },
-    { pattern: /flex/i, name: 'Flex Container' },
-    { pattern: /image|img|photo/i, name: 'Image' },
-    { pattern: /background|bg/i, name: 'Background' },
+    { pattern: /header/i, name: "Header" },
+    { pattern: /footer/i, name: "Footer" },
+    { pattern: /nav|navigation|menu/i, name: "Navigation" },
+    { pattern: /sidebar/i, name: "Sidebar" },
+    { pattern: /modal|dialog/i, name: "Modal" },
+    { pattern: /card/i, name: "Card" },
+    { pattern: /btn|button/i, name: "Button" },
+    { pattern: /input|field/i, name: "Input" },
+    { pattern: /avatar/i, name: "Avatar" },
+    { pattern: /icon/i, name: "Icon" },
+    { pattern: /badge|tag|chip/i, name: "Badge" },
+    { pattern: /title|heading/i, name: "Title" },
+    { pattern: /subtitle|subheading/i, name: "Subtitle" },
+    { pattern: /description|text/i, name: "Text" },
+    { pattern: /container|wrapper/i, name: "Container" },
+    { pattern: /content/i, name: "Content" },
+    { pattern: /list/i, name: "List" },
+    { pattern: /item/i, name: "Item" },
+    { pattern: /row/i, name: "Row" },
+    { pattern: /column|col/i, name: "Column" },
+    { pattern: /grid/i, name: "Grid" },
+    { pattern: /flex/i, name: "Flex Container" },
+    { pattern: /image|img|photo/i, name: "Image" },
+    { pattern: /background|bg/i, name: "Background" },
   ];
-  
+
   for (const { pattern, name } of semanticPatterns) {
     if (pattern.test(classes)) {
       return name;
     }
   }
-  
+
   // Use text content for text elements (truncated)
   const textContent = element.textContent?.trim();
   if (textContent && textContent.length > 0 && textContent.length < 30) {
     return textContent;
   }
-  
+
   // Fallback to tag name with index
   return tagName.charAt(0).toUpperCase() + tagName.slice(1);
 }
@@ -426,62 +551,68 @@ function getElementName(element: Element, styles: CSSStyleDeclaration): string {
 
 function parseFills(styles: CSSStyleDeclaration): Fill[] | undefined {
   const fills: Fill[] = [];
-  
+
   // Background color
   const bgColor = styles.backgroundColor;
-  if (bgColor && bgColor !== 'rgba(0, 0, 0, 0)' && bgColor !== 'transparent') {
+  if (bgColor && bgColor !== "rgba(0, 0, 0, 0)" && bgColor !== "transparent") {
     fills.push({
-      type: 'solid',
+      type: "solid",
       color: bgColor,
       opacity: 1,
     });
   }
-  
+
   // Background image/gradient
   const bgImage = styles.backgroundImage;
-  if (bgImage && bgImage !== 'none') {
+  if (bgImage && bgImage !== "none") {
     // Parse linear gradient
-    if (bgImage.includes('linear-gradient')) {
+    if (bgImage.includes("linear-gradient")) {
       const gradientMatch = bgImage.match(/linear-gradient\(([^)]+)\)/);
       if (gradientMatch) {
         fills.push({
-          type: 'gradient',
+          type: "gradient",
           color: bgImage, // Store full gradient string
           gradientStops: parseGradientStops(gradientMatch[1]),
         });
       }
     }
     // Parse radial gradient
-    else if (bgImage.includes('radial-gradient')) {
+    else if (bgImage.includes("radial-gradient")) {
       fills.push({
-        type: 'gradient',
+        type: "gradient",
         color: bgImage,
       });
     }
     // Parse image URL
-    else if (bgImage.includes('url(')) {
+    else if (bgImage.includes("url(")) {
       // More robust URL extraction that handles various formats
       // url("..."), url('...'), url(...), and URLs with special characters
       let urlMatch = bgImage.match(/url\(["']?([^"')]+)["']?\)/);
-      
+
       // Try alternative pattern for URLs with parentheses or complex chars
       if (!urlMatch) {
         urlMatch = bgImage.match(/url\(([^)]+)\)/);
       }
-      
+
       if (urlMatch) {
         let imageUrl = urlMatch[1].trim();
-        
+
         // Remove quotes if present
-        if ((imageUrl.startsWith('"') && imageUrl.endsWith('"')) ||
-            (imageUrl.startsWith("'") && imageUrl.endsWith("'"))) {
+        if (
+          (imageUrl.startsWith('"') && imageUrl.endsWith('"')) ||
+          (imageUrl.startsWith("'") && imageUrl.endsWith("'"))
+        ) {
           imageUrl = imageUrl.slice(1, -1);
         }
-        
+
         // Ensure it's a valid URL (not a gradient or other function)
-        if (imageUrl && !imageUrl.includes('gradient') && !imageUrl.includes('linear-')) {
+        if (
+          imageUrl &&
+          !imageUrl.includes("gradient") &&
+          !imageUrl.includes("linear-")
+        ) {
           fills.push({
-            type: 'image',
+            type: "image",
             imageUrl,
             imageScaleMode: parseBackgroundSize(styles.backgroundSize),
           });
@@ -489,112 +620,130 @@ function parseFills(styles: CSSStyleDeclaration): Fill[] | undefined {
       }
     }
   }
-  
+
   return fills.length > 0 ? fills : undefined;
 }
 
-function parseGradientStops(gradientContent: string): { color: string; position: number }[] {
+function parseGradientStops(
+  gradientContent: string,
+): { color: string; position: number }[] {
   const stops: { color: string; position: number }[] = [];
-  
+
   // Extract color stops from gradient string
   // Format: "direction, color1 position1, color2 position2, ..."
-  const parts = gradientContent.split(',').map(s => s.trim());
-  
+  const parts = gradientContent.split(",").map((s) => s.trim());
+
   // Skip the direction part
   const colorParts = parts.slice(1);
-  
+
   colorParts.forEach((part, index) => {
     // Extract color and position
     const colorMatch = part.match(/(rgba?\([^)]+\)|#[0-9a-fA-F]+|[a-z]+)/i);
     const positionMatch = part.match(/(\d+)%/);
-    
+
     if (colorMatch) {
       stops.push({
         color: colorMatch[1],
-        position: positionMatch ? parseInt(positionMatch[1]) / 100 : index / Math.max(colorParts.length - 1, 1),
+        position: positionMatch
+          ? parseInt(positionMatch[1]) / 100
+          : index / Math.max(colorParts.length - 1, 1),
       });
     }
   });
-  
+
   return stops;
 }
 
-function parseBackgroundSize(size: string): 'fill' | 'fit' | 'crop' | 'tile' {
-  if (size.includes('cover')) return 'fill';
-  if (size.includes('contain')) return 'fit';
-  if (size.includes('repeat')) return 'tile';
-  return 'fill';
+function parseBackgroundSize(size: string): "fill" | "fit" | "crop" | "tile" {
+  if (size.includes("cover")) return "fill";
+  if (size.includes("contain")) return "fit";
+  if (size.includes("repeat")) return "tile";
+  return "fill";
 }
 
 function parseStrokes(styles: CSSStyleDeclaration): Stroke[] | undefined {
   const strokes: Stroke[] = [];
-  
+
   // Check each border side
-  const sides = ['Top', 'Right', 'Bottom', 'Left'] as const;
+  const sides = ["Top", "Right", "Bottom", "Left"] as const;
   let hasUniformBorder = true;
   let firstBorder: Stroke | null = null;
-  
+
   for (const side of sides) {
-    const width = parseFloat(styles[`border${side}Width` as keyof CSSStyleDeclaration] as string);
-    const color = styles[`border${side}Color` as keyof CSSStyleDeclaration] as string;
-    const style = styles[`border${side}Style` as keyof CSSStyleDeclaration] as string;
-    
-    if (width > 0 && color && color !== 'rgba(0, 0, 0, 0)' && color !== 'transparent') {
+    const width = parseFloat(
+      styles[`border${side}Width` as keyof CSSStyleDeclaration] as string,
+    );
+    const color = styles[
+      `border${side}Color` as keyof CSSStyleDeclaration
+    ] as string;
+    const style = styles[
+      `border${side}Style` as keyof CSSStyleDeclaration
+    ] as string;
+
+    if (
+      width > 0 &&
+      color &&
+      color !== "rgba(0, 0, 0, 0)" &&
+      color !== "transparent"
+    ) {
       const stroke: Stroke = {
         color,
         width,
-        style: (style === 'dashed' || style === 'dotted') ? style : 'solid',
-        position: 'inside',
+        style: style === "dashed" || style === "dotted" ? style : "solid",
+        position: "inside",
       };
-      
+
       if (!firstBorder) {
         firstBorder = stroke;
-      } else if (stroke.width !== firstBorder.width || stroke.color !== firstBorder.color) {
+      } else if (
+        stroke.width !== firstBorder.width ||
+        stroke.color !== firstBorder.color
+      ) {
         hasUniformBorder = false;
       }
     }
   }
-  
+
   // Only add stroke if there's a uniform border
   if (firstBorder && hasUniformBorder) {
     strokes.push(firstBorder);
   }
-  
+
   return strokes.length > 0 ? strokes : undefined;
 }
 
 function parseShadows(styles: CSSStyleDeclaration): Shadow[] | undefined {
   const boxShadow = styles.boxShadow;
-  if (!boxShadow || boxShadow === 'none') return undefined;
-  
+  if (!boxShadow || boxShadow === "none") return undefined;
+
   const shadows: Shadow[] = [];
-  
+
   // Split multiple shadows (separated by commas, but not inside parentheses)
   const shadowParts = boxShadow.split(/,(?![^(]*\))/);
-  
+
   for (const part of shadowParts) {
     const trimmed = part.trim();
-    const isInset = trimmed.includes('inset');
-    const cleanPart = trimmed.replace('inset', '').trim();
-    
+    const isInset = trimmed.includes("inset");
+    const cleanPart = trimmed.replace("inset", "").trim();
+
     // Extract color (rgb/rgba/hex/named)
-    let color = 'rgba(0, 0, 0, 0.25)';
+    let color = "rgba(0, 0, 0, 0.25)";
     const rgbaMatch = cleanPart.match(/rgba?\([^)]+\)/);
     const hexMatch = cleanPart.match(/#[0-9a-fA-F]{3,8}/);
-    
+
     if (rgbaMatch) {
       color = rgbaMatch[0];
     } else if (hexMatch) {
       color = hexMatch[0];
     }
-    
+
     // Extract numeric values (offsetX, offsetY, blur, spread)
     const numbers = cleanPart.match(/-?\d+(\.\d+)?px/g) || [];
-    const values = numbers.map(n => parseFloat(n));
-    
+    const values = numbers.map((n) => parseFloat(n));
+
     if (values.length >= 2) {
       shadows.push({
-        type: isInset ? 'inner' : 'drop',
+        type: isInset ? "inner" : "drop",
         color,
         offsetX: values[0] || 0,
         offsetY: values[1] || 0,
@@ -603,64 +752,82 @@ function parseShadows(styles: CSSStyleDeclaration): Shadow[] | undefined {
       });
     }
   }
-  
+
   return shadows.length > 0 ? shadows : undefined;
 }
 
 function parseBorderRadius(
   styles: CSSStyleDeclaration,
   width?: number,
-  height?: number
-): number | { topLeft: number; topRight: number; bottomRight: number; bottomLeft: number } | undefined {
+  height?: number,
+):
+  | number
+  | {
+      topLeft: number;
+      topRight: number;
+      bottomRight: number;
+      bottomLeft: number;
+    }
+  | undefined {
   let topLeft = parseFloat(styles.borderTopLeftRadius) || 0;
   let topRight = parseFloat(styles.borderTopRightRadius) || 0;
   let bottomRight = parseFloat(styles.borderBottomRightRadius) || 0;
   let bottomLeft = parseFloat(styles.borderBottomLeftRadius) || 0;
-  
-  if (topLeft === 0 && topRight === 0 && bottomRight === 0 && bottomLeft === 0) {
+
+  if (
+    topLeft === 0 &&
+    topRight === 0 &&
+    bottomRight === 0 &&
+    bottomLeft === 0
+  ) {
     return undefined;
   }
-  
+
   // Cap extremely large values (like Tailwind's rounded-full: 9999px)
   // A reasonable max is half the element's smallest dimension
   // If we don't have dimensions, cap at a sensible default (24px)
-  const maxReasonableRadius = width && height 
-    ? Math.min(width, height) / 2 
-    : 24;
-  
+  const maxReasonableRadius =
+    width && height ? Math.min(width, height) / 2 : 24;
+
   // Only cap if the value seems unreasonably large (> 100px usually means rounded-full)
   // We want to preserve intentional large radius values while capping 9999px
   if (topLeft > 100) topLeft = Math.min(topLeft, maxReasonableRadius);
   if (topRight > 100) topRight = Math.min(topRight, maxReasonableRadius);
-  if (bottomRight > 100) bottomRight = Math.min(bottomRight, maxReasonableRadius);
+  if (bottomRight > 100)
+    bottomRight = Math.min(bottomRight, maxReasonableRadius);
   if (bottomLeft > 100) bottomLeft = Math.min(bottomLeft, maxReasonableRadius);
-  
+
   // If all corners are the same, return single value
-  if (topLeft === topRight && topRight === bottomRight && bottomRight === bottomLeft) {
+  if (
+    topLeft === topRight &&
+    topRight === bottomRight &&
+    bottomRight === bottomLeft
+  ) {
     return Math.round(topLeft);
   }
-  
+
   // Otherwise return object with all corners
-  return { 
-    topLeft: Math.round(topLeft), 
-    topRight: Math.round(topRight), 
-    bottomRight: Math.round(bottomRight), 
-    bottomLeft: Math.round(bottomLeft) 
+  return {
+    topLeft: Math.round(topLeft),
+    topRight: Math.round(topRight),
+    bottomRight: Math.round(bottomRight),
+    bottomLeft: Math.round(bottomLeft),
   };
 }
 
 function parseBlur(styles: CSSStyleDeclaration): number | undefined {
   const filter = styles.filter;
-  if (!filter || filter === 'none') return undefined;
-  
+  if (!filter || filter === "none") return undefined;
+
   const blurMatch = filter.match(/blur\((\d+(?:\.\d+)?)px\)/);
   return blurMatch ? parseFloat(blurMatch[1]) : undefined;
 }
 
 function parseBackdropBlur(styles: CSSStyleDeclaration): number | undefined {
-  const backdropFilter = styles.backdropFilter || (styles as any).webkitBackdropFilter;
-  if (!backdropFilter || backdropFilter === 'none') return undefined;
-  
+  const backdropFilter =
+    styles.backdropFilter || (styles as any).webkitBackdropFilter;
+  if (!backdropFilter || backdropFilter === "none") return undefined;
+
   const blurMatch = backdropFilter.match(/blur\((\d+(?:\.\d+)?)px\)/);
   return blurMatch ? parseFloat(blurMatch[1]) : undefined;
 }
@@ -669,18 +836,21 @@ function parseBackdropBlur(styles: CSSStyleDeclaration): number | undefined {
 // LAYOUT PARSER - IMPROVED
 // ============================================================================
 
-function parseLayout(styles: CSSStyleDeclaration): LayoutProperties | undefined {
+function parseLayout(
+  styles: CSSStyleDeclaration,
+): LayoutProperties | undefined {
   const display = styles.display;
-  
-  if (display !== 'flex' && display !== 'inline-flex') {
+
+  if (display !== "flex" && display !== "inline-flex") {
     return undefined;
   }
-  
+
   const flexDirection = styles.flexDirection;
-  const mode: LayoutMode = flexDirection === 'column' || flexDirection === 'column-reverse' 
-    ? 'vertical' 
-    : 'horizontal';
-  
+  const mode: LayoutMode =
+    flexDirection === "column" || flexDirection === "column-reverse"
+      ? "vertical"
+      : "horizontal";
+
   // Parse padding
   const padding = {
     top: parseFloat(styles.paddingTop) || 0,
@@ -688,39 +858,43 @@ function parseLayout(styles: CSSStyleDeclaration): LayoutProperties | undefined 
     bottom: parseFloat(styles.paddingBottom) || 0,
     left: parseFloat(styles.paddingLeft) || 0,
   };
-  
+
   // Parse gap
-  const gap = parseFloat(styles.gap) || parseFloat(styles.rowGap) || parseFloat(styles.columnGap) || 0;
-  
+  const gap =
+    parseFloat(styles.gap) ||
+    parseFloat(styles.rowGap) ||
+    parseFloat(styles.columnGap) ||
+    0;
+
   // Parse alignment
   const alignItemsMap: Record<string, LayoutAlign> = {
-    'flex-start': 'start',
-    'start': 'start',
-    'flex-end': 'end',
-    'end': 'end',
-    'center': 'center',
-    'stretch': 'stretch',
-    'baseline': 'baseline',
+    "flex-start": "start",
+    start: "start",
+    "flex-end": "end",
+    end: "end",
+    center: "center",
+    stretch: "stretch",
+    baseline: "baseline",
   };
-  
+
   const justifyContentMap: Record<string, LayoutJustify> = {
-    'flex-start': 'start',
-    'start': 'start',
-    'flex-end': 'end',
-    'end': 'end',
-    'center': 'center',
-    'space-between': 'space-between',
-    'space-around': 'space-around',
-    'space-evenly': 'space-evenly',
+    "flex-start": "start",
+    start: "start",
+    "flex-end": "end",
+    end: "end",
+    center: "center",
+    "space-between": "space-between",
+    "space-around": "space-around",
+    "space-evenly": "space-evenly",
   };
-  
+
   return {
     mode,
     padding,
     gap,
-    alignItems: alignItemsMap[styles.alignItems] || 'start',
-    justifyContent: justifyContentMap[styles.justifyContent] || 'start',
-    wrap: styles.flexWrap === 'wrap' || styles.flexWrap === 'wrap-reverse',
+    alignItems: alignItemsMap[styles.alignItems] || "start",
+    justifyContent: justifyContentMap[styles.justifyContent] || "start",
+    wrap: styles.flexWrap === "wrap" || styles.flexWrap === "wrap-reverse",
   };
 }
 
@@ -732,30 +906,35 @@ function buildTextNode(
   element: Element,
   styles: CSSStyleDeclaration,
   baseProps: BaseNodeProps,
-  win: Window
+  win: Window,
 ): TextNode {
   // Get all text content, including from nested inline elements
-  const content = element.textContent?.trim() || '';
-  
+  const content = element.textContent?.trim() || "";
+
   const textStyle: TextStyle = {
-    fontFamily: styles.fontFamily.split(',')[0]?.trim().replace(/['"]/g, '') || 'Inter',
+    fontFamily:
+      styles.fontFamily.split(",")[0]?.trim().replace(/['"]/g, "") || "Inter",
     fontSize: parseFloat(styles.fontSize) || 16,
     fontWeight: parseFontWeight(styles.fontWeight),
     lineHeight: parseLineHeight(styles.lineHeight, styles.fontSize),
     letterSpacing: parseFloat(styles.letterSpacing) || 0,
     textAlign: parseTextAlign(styles.textAlign),
-    textDecoration: parseTextDecoration(styles.textDecorationLine || styles.textDecoration),
+    textDecoration: parseTextDecoration(
+      styles.textDecorationLine || styles.textDecoration,
+    ),
     textTransform: parseTextTransform(styles.textTransform),
   };
-  
+
   // Text color from computed color (this is the FILL for text)
-  const textColor = styles.color || '#000000';
-  const fills: Fill[] = [{
-    type: 'solid',
-    color: textColor,
-    opacity: 1,
-  }];
-  
+  const textColor = styles.color || "#000000";
+  const fills: Fill[] = [
+    {
+      type: "solid",
+      color: textColor,
+      opacity: 1,
+    },
+  ];
+
   return {
     // Use base props but override fills (text shouldn't have background)
     id: baseProps.id,
@@ -767,7 +946,7 @@ function buildTextNode(
     width: baseProps.width,
     height: baseProps.height,
     opacity: baseProps.opacity,
-    type: 'text',
+    type: "text",
     content,
     textStyle,
     fills, // Only text color, no background
@@ -780,225 +959,193 @@ function buildTextNode(
 function parseFontWeight(weight: string): number {
   const numWeight = parseInt(weight);
   if (!isNaN(numWeight)) return numWeight;
-  
+
   const weightMap: Record<string, number> = {
-    'normal': 400,
-    'bold': 700,
-    'lighter': 300,
-    'bolder': 700,
+    normal: 400,
+    bold: 700,
+    lighter: 300,
+    bolder: 700,
   };
   return weightMap[weight] || 400;
 }
 
 function parseLineHeight(lineHeight: string, fontSize: string): number {
-  if (lineHeight === 'normal') return 1.2;
-  
+  if (lineHeight === "normal") return 1.2;
+
   const lhValue = parseFloat(lineHeight);
   const fsValue = parseFloat(fontSize);
-  
+
   // If line-height is in px, convert to ratio
-  if (lineHeight.includes('px') && fsValue > 0) {
+  if (lineHeight.includes("px") && fsValue > 0) {
     return lhValue / fsValue;
   }
-  
+
   return lhValue || 1.2;
 }
 
-function parseTextAlign(align: string): TextStyle['textAlign'] {
-  const alignMap: Record<string, TextStyle['textAlign']> = {
-    'left': 'left',
-    'right': 'right',
-    'center': 'center',
-    'justify': 'justify',
-    'start': 'left',
-    'end': 'right',
+function parseTextAlign(align: string): TextStyle["textAlign"] {
+  const alignMap: Record<string, TextStyle["textAlign"]> = {
+    left: "left",
+    right: "right",
+    center: "center",
+    justify: "justify",
+    start: "left",
+    end: "right",
   };
-  return alignMap[align] || 'left';
+  return alignMap[align] || "left";
 }
 
-function parseTextDecoration(decoration: string): TextStyle['textDecoration'] {
-  if (decoration.includes('underline')) return 'underline';
-  if (decoration.includes('line-through')) return 'line-through';
-  return 'none';
+function parseTextDecoration(decoration: string): TextStyle["textDecoration"] {
+  if (decoration.includes("underline")) return "underline";
+  if (decoration.includes("line-through")) return "line-through";
+  return "none";
 }
 
-function parseTextTransform(transform: string): TextStyle['textTransform'] {
-  const transformMap: Record<string, TextStyle['textTransform']> = {
-    'uppercase': 'uppercase',
-    'lowercase': 'lowercase',
-    'capitalize': 'capitalize',
-    'none': 'none',
+function parseTextTransform(transform: string): TextStyle["textTransform"] {
+  const transformMap: Record<string, TextStyle["textTransform"]> = {
+    uppercase: "uppercase",
+    lowercase: "lowercase",
+    capitalize: "capitalize",
+    none: "none",
   };
-  return transformMap[transform] || 'none';
+  return transformMap[transform] || "none";
 }
 
 function buildImageNode(
   element: HTMLImageElement,
   styles: CSSStyleDeclaration,
-  baseProps: BaseNodeProps
+  baseProps: BaseNodeProps,
 ): ImageNode {
   const objectFit = styles.objectFit;
-  
+
   // Get the image source - prefer the fully resolved src property over getAttribute
   // element.src gives us the absolute URL
-  let src = '';
-  
+  let src = "";
+
   // First try the resolved src property (gives absolute URL)
   if (element.src) {
     src = element.src;
   }
-  
+
   // Fallback to attribute
   if (!src) {
-    src = element.getAttribute('src') || '';
+    src = element.getAttribute("src") || "";
   }
-  
+
   // Handle srcset - get the largest image
-  const srcset = element.getAttribute('srcset');
+  const srcset = element.getAttribute("srcset");
   if (srcset && !src) {
-    const sources = srcset.split(',').map(s => s.trim());
+    const sources = srcset.split(",").map((s) => s.trim());
     if (sources.length > 0) {
       // Get the last (usually largest) source
       const lastSource = sources[sources.length - 1];
-      src = lastSource.split(' ')[0];
+      src = lastSource.split(" ")[0];
     }
   }
-  
+
   // Handle lazy loading - check data-src attributes
-  if (!src || src.includes('data:image/gif') || src.includes('placeholder')) {
-    src = element.getAttribute('data-src') || 
-          element.getAttribute('data-lazy-src') ||
-          element.getAttribute('data-original') ||
-          src;
+  if (!src || src.includes("data:image/gif") || src.includes("placeholder")) {
+    src =
+      element.getAttribute("data-src") ||
+      element.getAttribute("data-lazy-src") ||
+      element.getAttribute("data-original") ||
+      src;
   }
-  
+
   // Ensure URL is absolute
-  if (src && !src.startsWith('http') && !src.startsWith('data:')) {
+  if (src && !src.startsWith("http") && !src.startsWith("data:")) {
     try {
       src = new URL(src, element.ownerDocument.baseURI).href;
     } catch {
       // Keep relative if URL parsing fails
     }
   }
-  
+
   return {
     ...baseProps,
-    type: 'image',
+    type: "image",
     src,
-    alt: element.alt || element.getAttribute('alt') || '',
-    objectFit: objectFit === 'contain' ? 'contain' : objectFit === 'fill' ? 'fill' : 'cover',
+    alt: element.alt || element.getAttribute("alt") || "",
+    objectFit:
+      objectFit === "contain"
+        ? "contain"
+        : objectFit === "fill"
+          ? "fill"
+          : "cover",
   };
 }
 
 /**
- * Build a node for SVG elements
- * SVGs are treated as rectangles with their visual appearance
+ * Build a node for SVG elements - preserve SVG content for vector export
  */
 function buildSvgNode(
   element: Element,
   styles: CSSStyleDeclaration,
-  baseProps: BaseNodeProps
-): RectangleNode {
-  // Try to extract primary colors from SVG
-  const fills: Fill[] = [];
-  const strokes: Stroke[] = [];
-  
-  // Check for stroke/fill on SVG children
-  const circles = element.querySelectorAll('circle');
-  const paths = element.querySelectorAll('path');
-  const rects = element.querySelectorAll('rect');
-  
-  // Get stroke color from first circle or path
-  const firstShape = circles[0] || paths[0] || rects[0];
-  if (firstShape) {
-    const win = element.ownerDocument.defaultView;
-    if (win) {
-      const shapeStyles = win.getComputedStyle(firstShape);
-      const strokeColor = shapeStyles.stroke;
-      const fillColor = shapeStyles.fill;
-      
-      if (strokeColor && strokeColor !== 'none' && strokeColor !== 'transparent') {
-        strokes.push({
-          color: strokeColor,
-          width: parseFloat(shapeStyles.strokeWidth) || 2,
-          style: 'solid',
-          position: 'center',
-        });
-      }
-      
-      if (fillColor && fillColor !== 'none' && fillColor !== 'transparent') {
-        fills.push({
-          type: 'solid',
-          color: fillColor,
-          opacity: 1,
-        });
-      }
-    }
-  }
-  
+  baseProps: BaseNodeProps,
+): SvgNode {
+  const viewBox = element.getAttribute("viewBox") || undefined;
+  const svgContent = element.innerHTML.trim();
   return {
     ...baseProps,
-    type: 'rectangle',
-    fills: fills.length > 0 ? fills : baseProps.fills,
-    strokes: strokes.length > 0 ? strokes : baseProps.strokes,
-    // Use the actual corner radius from styles, not forced circular
-    cornerRadius: baseProps.cornerRadius,
+    type: "svg",
+    svgContent,
+    viewBox,
   };
 }
 
 function buildIconNode(
   element: Element,
   styles: CSSStyleDeclaration,
-  baseProps: BaseNodeProps
+  baseProps: BaseNodeProps,
 ): IconNode {
   // Get icon attribute (iconify-icon uses "icon" attribute)
-  const iconAttr = element.getAttribute('icon') || '';
-  
+  const iconAttr = element.getAttribute("icon") || "";
+
   // Parse icon name and library
   // Format is usually "prefix:icon-name" e.g., "hugeicons:home-01" or "lucide:menu"
-  let iconLibrary = 'hugeicons'; // Default to hugeicons since that's what the app uses
+  let iconLibrary = "hugeicons"; // Default to hugeicons since that's what the app uses
   let iconName = iconAttr;
-  
-  if (iconAttr.includes(':')) {
-    const parts = iconAttr.split(':');
+
+  if (iconAttr.includes(":")) {
+    const parts = iconAttr.split(":");
     iconLibrary = parts[0];
-    iconName = parts.slice(1).join(':');
+    iconName = parts.slice(1).join(":");
   }
-  
+
   // Get color from computed styles or element attributes
   let color = styles.color;
-  
+
   // Check for inline style color
-  const inlineStyle = element.getAttribute('style') || '';
+  const inlineStyle = element.getAttribute("style") || "";
   const colorMatch = inlineStyle.match(/color:\s*([^;]+)/);
   if (colorMatch) {
     color = colorMatch[1].trim();
   }
-  
+
   // Check for class-based color (e.g., text-[var(--primary)])
-  const classAttr = element.getAttribute('class') || '';
+  const classAttr = element.getAttribute("class") || "";
   const classColorMatch = classAttr.match(/text-\[([^\]]+)\]/);
-  if (classColorMatch && (!color || color === 'rgb(0, 0, 0)')) {
+  if (classColorMatch && (!color || color === "rgb(0, 0, 0)")) {
     // This is a CSS variable reference, use computed style
     color = styles.color;
   }
-  
+
   // Get explicit width/height attributes if set
   let width = baseProps.width;
   let height = baseProps.height;
-  
-  const widthAttr = element.getAttribute('width');
-  const heightAttr = element.getAttribute('height');
-  
-  if (widthAttr && !widthAttr.includes('%')) {
+
+  const widthAttr = element.getAttribute("width");
+  const heightAttr = element.getAttribute("height");
+
+  if (widthAttr && !widthAttr.includes("%")) {
     const parsed = parseInt(widthAttr);
     if (!isNaN(parsed) && parsed > 0) width = parsed;
   }
-  if (heightAttr && !heightAttr.includes('%')) {
+  if (heightAttr && !heightAttr.includes("%")) {
     const parsed = parseInt(heightAttr);
     if (!isNaN(parsed) && parsed > 0) height = parsed;
   }
-  
+
   // Try to get size from font-size (icons often match text size)
   if ((width < 8 || height < 8) && styles.fontSize) {
     const fontSize = parseFloat(styles.fontSize);
@@ -1007,43 +1154,90 @@ function buildIconNode(
       height = Math.max(height, fontSize);
     }
   }
-  
+
   // Ensure minimum size for icons (some might have 0 computed dimensions)
   if (width < 8) width = 24;
   if (height < 8) height = 24;
-  
+
   // Make sure we have a valid color (not empty or just black if it should be different)
-  if (!color || color === 'rgba(0, 0, 0, 0)' || color === 'transparent') {
-    color = '#666666';
+  if (!color || color === "rgba(0, 0, 0, 0)" || color === "transparent") {
+    color = "#666666";
   }
-  
+
+  // Capture inline SVG path data for Figma VECTOR export (icons must be vectors, not pixels)
+  const svgPathData = extractSvgPathDataFromElement(element);
+
   return {
     ...baseProps,
-    type: 'icon',
+    type: "icon",
     iconName,
     iconLibrary,
     color,
     width,
     height,
+    ...(svgPathData.length > 0 ? { svgPathData } : {}),
   };
+}
+
+/**
+ * Extract SVG path d attributes from an element (iconify-icon shadow root or child SVG)
+ */
+function extractSvgPathDataFromElement(element: Element): string[] {
+  const paths: string[] = [];
+  let svgEl: Element | null = null;
+
+  // iconify-icon uses shadow root with SVG
+  const root =
+    (element as HTMLElement & { shadowRoot?: ShadowRoot }).shadowRoot ||
+    element;
+  svgEl = root.querySelector("svg");
+  if (!svgEl && element.firstElementChild?.tagName?.toLowerCase() === "svg") {
+    svgEl = element.firstElementChild;
+  }
+  if (!svgEl) return paths;
+
+  const pathElements = svgEl.querySelectorAll("path");
+  pathElements.forEach((p) => {
+    const d = p.getAttribute("d");
+    if (d && d.trim()) paths.push(d.trim());
+  });
+  // Also check rect/circle/polygon and convert to path-like data if needed (Figma accepts SVG path syntax)
+  const rects = svgEl.querySelectorAll("rect");
+  rects.forEach((r) => {
+    const x = parseFloat(r.getAttribute("x") || "0");
+    const y = parseFloat(r.getAttribute("y") || "0");
+    const w = parseFloat(r.getAttribute("width") || "0");
+    const h = parseFloat(r.getAttribute("height") || "0");
+    if (w && h)
+      paths.push(
+        `M ${x} ${y} L ${x + w} ${y} L ${x + w} ${y + h} L ${x} ${y + h} Z`,
+      );
+  });
+  return paths;
 }
 
 function buildInputNode(
   element: HTMLInputElement,
   styles: CSSStyleDeclaration,
-  baseProps: BaseNodeProps
+  baseProps: BaseNodeProps,
 ): InputNode {
-  const inputType = element.type || 'text';
-  const validTypes: InputNode['inputType'][] = ['text', 'email', 'password', 'number', 'search'];
-  
+  const inputType = element.type || "text";
+  const validTypes: InputNode["inputType"][] = [
+    "text",
+    "email",
+    "password",
+    "number",
+    "search",
+  ];
+
   return {
     ...baseProps,
-    type: 'input',
-    inputType: validTypes.includes(inputType as InputNode['inputType']) 
-      ? (inputType as InputNode['inputType']) 
-      : 'text',
-    placeholder: element.placeholder || '',
-    value: element.value || '',
+    type: "input",
+    inputType: validTypes.includes(inputType as InputNode["inputType"])
+      ? (inputType as InputNode["inputType"])
+      : "text",
+    placeholder: element.placeholder || "",
+    value: element.value || "",
     disabled: element.disabled || false,
   };
 }
@@ -1055,49 +1249,60 @@ function buildContainerNode(
   rootOffsetX: number,
   rootOffsetY: number,
   depth: number,
-  nodeType: 'frame' | 'button'
+  nodeType: "frame" | "button",
 ): FrameNode | ButtonNode {
   const children: DesignNode[] = [];
   const win = element.ownerDocument.defaultView!;
-  
+
   // Parse all child elements
   const childElements = Array.from(element.children);
-  
+
   for (const child of childElements) {
-    const childNode = parseElement(child, element, rootOffsetX, rootOffsetY, depth + 1);
+    const childNode = parseElement(
+      child,
+      element,
+      rootOffsetX,
+      rootOffsetY,
+      depth + 1,
+    );
     if (childNode) {
       children.push(childNode);
     }
   }
-  
+
   // Check for direct text content (text not in child elements)
   const directText = getDirectTextContent(element);
-  
+
   if (directText) {
     if (children.length === 0) {
       // Container has only text - add text node as child
       const textRect = element.getBoundingClientRect();
-      const textNode = buildTextNode(element, styles, {
-        ...baseProps,
-        id: generateNodeId(),
-        name: directText.slice(0, 20),
-        x: baseProps.x,
-        y: baseProps.y,
-        width: baseProps.width,
-        height: baseProps.height,
-        // Text node shouldn't inherit container's fills
-        fills: undefined,
-        strokes: undefined,
-        shadows: undefined,
-      }, win);
-      
+      const textNode = buildTextNode(
+        element,
+        styles,
+        {
+          ...baseProps,
+          id: generateNodeId(),
+          name: directText.slice(0, 20),
+          x: baseProps.x,
+          y: baseProps.y,
+          width: baseProps.width,
+          height: baseProps.height,
+          // Text node shouldn't inherit container's fills
+          fills: undefined,
+          strokes: undefined,
+          shadows: undefined,
+        },
+        win,
+      );
+
       // Don't wrap in frame - just return the frame with text child
       return {
         ...baseProps,
         type: nodeType,
         children: [textNode],
         layout: parseLayout(styles),
-        clipContent: styles.overflow === 'hidden' || styles.overflow === 'clip',
+        clipContent: styles.overflow === "hidden" || styles.overflow === "clip",
       } as FrameNode | ButtonNode;
     } else {
       // Container has both child elements AND direct text
@@ -1105,7 +1310,7 @@ function buildContainerNode(
       const textNode: TextNode = {
         id: generateNodeId(),
         name: directText.slice(0, 20),
-        type: 'text',
+        type: "text",
         visible: true,
         locked: false,
         x: baseProps.x,
@@ -1115,49 +1320,53 @@ function buildContainerNode(
         opacity: 1,
         content: directText,
         textStyle: {
-          fontFamily: styles.fontFamily.split(',')[0]?.trim().replace(/['"]/g, '') || 'Inter',
+          fontFamily:
+            styles.fontFamily.split(",")[0]?.trim().replace(/['"]/g, "") ||
+            "Inter",
           fontSize: parseFloat(styles.fontSize) || 16,
           fontWeight: parseFontWeight(styles.fontWeight),
           lineHeight: parseLineHeight(styles.lineHeight, styles.fontSize),
           letterSpacing: parseFloat(styles.letterSpacing) || 0,
           textAlign: parseTextAlign(styles.textAlign),
-          textDecoration: parseTextDecoration(styles.textDecorationLine || styles.textDecoration),
+          textDecoration: parseTextDecoration(
+            styles.textDecorationLine || styles.textDecoration,
+          ),
           textTransform: parseTextTransform(styles.textTransform),
         },
-        fills: [{ type: 'solid', color: styles.color, opacity: 1 }],
+        fills: [{ type: "solid", color: styles.color, opacity: 1 }],
       };
       children.unshift(textNode); // Add text at the beginning
     }
   }
-  
+
   const result = {
     ...baseProps,
     type: nodeType,
     children,
     layout: parseLayout(styles),
-    clipContent: styles.overflow === 'hidden' || styles.overflow === 'clip',
+    clipContent: styles.overflow === "hidden" || styles.overflow === "clip",
   };
-  
-  if (nodeType === 'button') {
+
+  if (nodeType === "button") {
     return {
       ...result,
-      variant: 'primary',
+      variant: "primary",
       disabled: (element as HTMLButtonElement).disabled || false,
     } as ButtonNode;
   }
-  
+
   return result as FrameNode;
 }
 
 function getDirectTextContent(element: Element): string | null {
-  let text = '';
-  
+  let text = "";
+
   for (const node of element.childNodes) {
     if (node.nodeType === Node.TEXT_NODE) {
-      text += node.textContent || '';
+      text += node.textContent || "";
     }
   }
-  
+
   const trimmed = text.trim();
   return trimmed.length > 0 ? trimmed : null;
 }
