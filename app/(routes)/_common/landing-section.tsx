@@ -376,6 +376,7 @@ import { DeviceType } from "@/components/prompt-input";
 import WorkingWithGimble from "@/components/landing/WorkingWithGimble";
 import LatestPost from "@/components/landing/LatestPost";
 import UsersFeedback from "@/components/landing/UsersFeedback";
+import { openSauceOne } from "@/app/fonts";
 
 // Loading state type for the design process
 type LoadingState = "idle" | "enhancing" | "designing";
@@ -526,13 +527,13 @@ const LandingSection = () => {
   };
 
   return (
-    <div className=" w-full min-h-screen">
+    <div className={` w-full min-h-screen ${openSauceOne.className}`}>
       <div className="flex flex-col ">
         <Header />
         <BlurFade>
           <div
             className={`relative  overflow-hidden py-28 border border-zinc-50 dark:border-zinc-900
-           ${inter.className}`}
+           `}
           >
             <div className="absolute inset-0 z-[-1]"></div>
             <div
