@@ -35,7 +35,7 @@ const Header = () => {
          flex items-center justify-between"
         >
           <Logo />
-          <nav className="flex gap-6 items-center">
+          <nav className="flex gap-6 items-center text-black/80 font-medium text-sm leading-[1.55em]">
             <Link
               href={user ? "/dashboard" : "/login"}
               className="text-sm font-medium text-foreground hover:opacity-80 transition-opacity"

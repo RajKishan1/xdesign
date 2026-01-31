@@ -357,7 +357,7 @@ import { authClient } from "@/lib/auth-client";
 import { Spinner } from "@/components/ui/spinner";
 import { ProjectType } from "@/types/project";
 import { useRouter } from "next/navigation";
-import { FolderOpenDotIcon } from "lucide-react";
+import { FolderOpenDotIcon, Sparkle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Faq from "@/components/landing/Faq";
 import HowItWorks from "@/components/landing/HowItWorks";
@@ -550,20 +550,31 @@ const LandingSection = () => {
          items-center justify-center gap-8  
         "
             >
-              <div className="space-y-3">
-                <div className="mx-auto text-center">
-                  5.0 rating . 110+ reviews
+              <div className="flex flex-col items-center space-y-3">
+                <div
+                  className="flex items-center gap-2
+                 mx-auto text-center"
+                >
+                  <span className="flex gap-1 ">
+                    <Sparkle size={12} color="#6a3fde" strokeWidth={3} />
+                    <Sparkle size={12} color="#6a3fde" strokeWidth={3} />
+                    <Sparkle size={12} color="#6a3fde" strokeWidth={3} />
+                    <Sparkle size={12} color="#6a3fde" strokeWidth={3} />
+                    <Sparkle size={12} color="#6a3fde" strokeWidth={3} />
+                   
+                  </span>
+                  <p className="font-medium text-black/80 dark:text-zinc-200 text-sm leading-[1.55em]">5.0 rating . 110+ reviews</p>
                 </div>
                 <h1
                   className="text-center font-bold  text-5xl
-            tracking-tight  bg-black dark:bg-linear-to-r dark:from-white dark:to-zinc-900 bg-clip-text text-transparent pb-1 "
+            tracking-[-0.045em] leading-[1.22em]  bg-black dark:bg-linear-to-r dark:from-white dark:to-zinc-700 bg-clip-text text-transparent pb-1 pt-5 "
                 >
                   Design your entire digital <br className="" />
                   product with one prompt.
                   {/* <span className="text-primary">in minutes</span> */}
                 </h1>
                 <div className="mx-auto max-w-md ">
-                  <p className="text-center font-normal text-foreground leading-relaxed sm:text-lg">
+                  <p className="text-center font-normal text-black/60 dark:text-zinc-200 text-[17px] leading-[1.55em] tracking-[-0.035em] sm:text-lg">
                     Generate complete screens, user flows, and layouts
                     automatically — from idea to polished UI.
                   </p>
@@ -574,7 +585,7 @@ const LandingSection = () => {
                 className="flex w-full max-w-3xl flex-col
             item-center gap-8 relative "
               >
-                <div className="w-full mt-12">
+                <div className="w-full mt-14.5">
                   <PromptInput
                     className=""
                     promptText={promptText}
@@ -609,9 +620,10 @@ const LandingSection = () => {
             </div>
           </div>
         </BlurFade>
-        <TrustedBy />
-        <div className="w-full py-10 border-x border-zinc-900">
+        {/* <TrustedBy /> */}
+        <div className="w-full py-10 border-x border-zinc-200">
           <div className="mx-auto max-w-3xl">
+            
             {userId && (
               <div>
                 <h1
@@ -667,7 +679,9 @@ const LandingSection = () => {
         </div>
       </div>
       <ExploreTemplates />
+      <Lines />
       <WhatYouGet />
+      <Lines />
       <WorkingWithGimble />
       {/* <FeaturesBento /> */}
 

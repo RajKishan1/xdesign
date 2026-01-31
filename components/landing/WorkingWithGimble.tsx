@@ -119,7 +119,7 @@ const WorkingWithGimble = () => {
   });
 
   return (
-    <div className="flex py-40 w-full items-center justify-center bg-[#f9f9f9] dark:bg-black p-8">
+    <div className="flex  h-163 w-full items-center justify-center bg-[#f9f9f9] dark:bg-black p-8">
       <div className="text-center w-full flex items-center">
         <div className="flex items-center justify-center gap-2.5 mx-auto">
           <span className="rounded-full p-2.5 bg-white">
@@ -131,7 +131,7 @@ const WorkingWithGimble = () => {
         </div>
         <div
           className="relative mx-auto h-80 w-full max-w-md overflow-hidden "
-          style={{ perspective: "500px" }}
+          style={{ perspective: "600px" }}
         >
           {/* Fade masks */}
           <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-20 bg-linear-to-b from-gray-50 dark:from-black to-transparent" />

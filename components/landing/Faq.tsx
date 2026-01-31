@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Plus } from "lucide-react";
 import { Inter_Tight } from "next/font/google";
 const inter = Inter_Tight({ subsets: ["latin"] });
 const Faq = () => {
@@ -26,6 +26,22 @@ const Faq = () => {
       answer:
         "We offer post-launch support options including maintenance packages, technical support retainers, and on-demand assistance. All projects include a warranty period for bug fixes and technical issues.",
     },
+    {
+      question: "How long does a typical project take?",
+      answer:
+        "Project timelines vary based on scope and complexity. A typical website project takes 4–8 weeks from initial consultation to launch. This includes discovery, design, development, testing, and deployment phases. We'll provide a detailed timeline during our initial consultation based on your specific requirements.",
+    },
+    {
+      question: "How long does a typical project take?",
+      answer:
+        "Project timelines vary based on scope and complexity. A typical website project takes 4–8 weeks from initial consultation to launch. This includes discovery, design, development, testing, and deployment phases. We'll provide a detailed timeline during our initial consultation based on your specific requirements.",
+    },
+    {
+      question: "How long does a typical project take?",
+      answer:
+        "Project timelines vary based on scope and complexity. A typical website project takes 4–8 weeks from initial consultation to launch. This includes discovery, design, development, testing, and deployment phases. We'll provide a detailed timeline during our initial consultation based on your specific requirements.",
+    },
+   
   ];
 
   const toggleFAQ = (index: number) => {
@@ -34,28 +50,28 @@ const Faq = () => {
 
   return (
     <section
-      className={` bg-[#f9f9f9]  dark:bg-black transition-colors duration-300 ${inter.className} `}
+      className={` bg-[#f9f9f9]  dark:bg-black transition-colors duration-300 ${inter.className} px-6`}
     >
-      <div className="max-w-7xl flex justify-between items-center bg-red-900 mx-auto  py-12 border border-zinc-300 dark:border-zinc-900">
-        <div className="grid grid-cols-1 lg:grid-cols-12 ">
+      <div className=" flex justify-between items-center  mx-auto  pt-12 border border-b-0 border-zinc-200 dark:border-zinc-900">
+        <div className="flex justify-center ">
           {/* Title Section */}
-          <div className="lg:col-span-4 p-6 border border-[#f8f8f8] dark:border-zinc-900 w-100">
-            <span className="rounded-full bg-white p-1.5 flex items-center justify-center">
+          <div className="w-1/2 lg:col-span-4 p-6 border-y px-12 dark:border-zinc-900 ">
+            <p className="bg-white rounded-full px-3.75 py-1 text-sm">
               Common questions
-            </span>
+            </p>
             <h1
-              className={`text-[40px] font-medium leading-tight text-black dark:text-white `}
+              className={`text-[40px] py-4 mb-0.5 font-medium leading-tight text-black dark:text-white `}
             >
               Find Your Answers Here
             </h1>
-            <p>
-              Find answers to common questions about Bloopix, its features, and
-              how it can help your team.
+            <p className="text-black/60 text-[18px] leading-[1.55em] font-medium tracking-[-0.03em]">
+              Find answers to common questions about Bloopix, <br />
+              its features, and how it can help your team.
             </p>
           </div>
 
           {/* FAQ Items */}
-          <div className="lg:col-span-8 space-y-4 max-w-135 border-x border-gray-200 dark:border-zinc-900 ">
+          <div className="lg:col-span-8 space-y-4 w-1/2 border-x border-gray-200 dark:border-zinc-900 ">
             {faqs.map((faq, index) => (
               <div
                 key={index}
@@ -73,10 +89,10 @@ const Faq = () => {
                   <span className="text-lg font-normal pr-8 text-black dark:text-white">
                     {faq.question}
                   </span>
-                  <ChevronDown
-                    size={20}
-                    className={`flex shrink-0 transition-transform duration-300 text-black dark:text-white ${
-                      openIndex === index ? "rotate-180" : ""
+                  <Plus
+                    size={16}
+                    className={`flex shrink-0 transition-transform duration-300 text-black/65 dark:text-white ${
+                      openIndex === index ? "rotate-225 bg-indigo-500 rounded-full text-white p-0.5 h-5 w-5" : ""
                     }`}
                   />
                 </button>

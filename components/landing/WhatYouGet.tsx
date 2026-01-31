@@ -18,6 +18,21 @@ const WhatYouGet = () => {
       answer:
         "Project timelines vary based on scope and complexity. A typical website project takes 4–8 weeks from initial consultation to launch. This includes discovery, design, development, testing, and deployment phases. We'll provide a detailed timeline during our initial consultation based on your specific requirements.",
     },
+    {
+      question: "How long does a typical project take?",
+      answer:
+        "Project timelines vary based on scope and complexity. A typical website project takes 4–8 weeks from initial consultation to launch. This includes discovery, design, development, testing, and deployment phases. We'll provide a detailed timeline during our initial consultation based on your specific requirements.",
+    },
+    {
+      question: "How long does a typical project take?",
+      answer:
+        "Project timelines vary based on scope and complexity. A typical website project takes 4–8 weeks from initial consultation to launch. This includes discovery, design, development, testing, and deployment phases. We'll provide a detailed timeline during our initial consultation based on your specific requirements.",
+    },
+    {
+      question: "How long does a typical project take?",
+      answer:
+        "Project timelines vary based on scope and complexity. A typical website project takes 4–8 weeks from initial consultation to launch. This includes discovery, design, development, testing, and deployment phases. We'll provide a detailed timeline during our initial consultation based on your specific requirements.",
+    },
   ];
   return (
     <section className="bg-[#f9f9f9] dark:bg-black border border-zinc-200 dark:border-zinc-900 px-6">
@@ -81,7 +96,7 @@ const WhatYouGet = () => {
             ))}
           </div>{" "}
         </div>
-        <div className="w-1/2 bg-red-200"></div>
+        <div className="w-1/2 border-t border-r border-zinc-200"></div>
       </div>
     </section>
   );
