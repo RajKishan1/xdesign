@@ -379,6 +379,7 @@ import UsersFeedback from "@/components/landing/UsersFeedback";
 import { openSauceOne } from "@/app/fonts";
 import WhatYouGet from "@/components/landing/WhatYouGet";
 import { getGenerationModel } from "@/constant/models";
+import Lines from "@/components/landing/atoms/Lines";
 
 // Loading state type for the design process
 type LoadingState = "idle" | "enhancing" | "designing";
@@ -671,9 +672,12 @@ const LandingSection = () => {
       {/* <FeaturesBento /> */}
 
       <PricingPage />
-      <HowItWorks />
+      {/* <HowItWorks /> */}
+      <Lines />
       <LatestPost />
+      <Lines />
       <UsersFeedback />
+      <Lines />
       <Faq />
       <FooterDemo />
     </div>

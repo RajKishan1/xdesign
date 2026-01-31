@@ -33,33 +33,24 @@ const LatestPost = () => {
 
   return (
     <div className={isDark ? "dark" : ""}>
-      <div className="min-h-screen bg-gray-50 px-4 py-16 dark:bg-gray-950 sm:px-6 lg:px-8">
-       
-
+      <div className=" bg-gray-50 px-4 md:mt-6 pt-16 dark:bg-gray-950 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           {/* Header Section */}
-          <div className="mb-12 text-center">
-            {/* Top Badge */}
-            <div className="mb-6 flex items-center justify-center gap-2">
-            
-              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Latest posts
-              </span>
-            
-            </div>
+          <div className="mb-12 flex flex-col items-center">
+            <h2 className="bg-white p-1.5 px-3 rounded-full mb-2.5 text-black text-sm">
+              Latest posts
+            </h2>
 
             {/* Main Heading */}
-            <h2 className="mb-4 text-4xl font-bold tracking-tight text-gray-900 dark:text-white sm:text-5xl">
+            <h2 className="mb-4 text-[40px] font-semibold tracking-tight leading-[1.25em] text-black dark:text-white ">
               Explore recent insights
             </h2>
 
             {/* Description */}
-            <p className="mx-auto max-w-2xl text-lg text-gray-600 dark:text-gray-400">
-              Discover the latest updates, creative strategies, and design ideas
-              shared through our blog posts
+            <p className="mx-auto max-w-2xl text-gray-600 text-center dark:text-gray-400  text-[17px] leading-[1.55em] tracking-[-0.035em]">
+              Discover the latest updates, creative strategies, and
+              <br /> design ideas shared through our blog posts
             </p>
-
-          
           </div>
 
           {/* Blog Cards Grid */}
@@ -67,7 +58,7 @@ const LatestPost = () => {
             {posts.map((post) => (
               <article
                 key={post.id}
-                className="group cursor-pointer overflow-hidden rounded-none bg-white shadow-sm transition-all hover:shadow-xl dark:bg-gray-900"
+                className="group cursor-pointer overflow-hidden rounded-none  bg-white   dark:bg-gray-900"
               >
                 {/* Image/linear Area */}
                 <div className="relative h-64 overflow-hidden">
@@ -84,16 +75,16 @@ const LatestPost = () => {
                 </div>
 
                 {/* Content */}
-                <div className="p-6">
-                  <h3 className="mb-4 text-xl font-bold leading-tight text-gray-900 transition-colors group-hover:text-gray-700 dark:text-white dark:group-hover:text-gray-300">
+                <div className="p-6 border border-t-0 border-zinc-200">
+                  <h3 className="mb-4 text-xl font-medium leading-[1.5em] tracking-[-0.035em] text-gray-900 transition-colors group-hover:text-gray-700 dark:text-white dark:group-hover:text-gray-300">
                     {post.title}
                   </h3>
 
                   {/* Meta Information */}
-                  <div className="flex items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
-                    <span className="font-medium">{post.category}</span>
-                    <span className="h-1 w-1 rounded-full bg-gray-400"></span>
-                    <span>{post.date}</span>
+                  <div className="flex items-center gap-3 text-sm  leading-[1.55em] tracking-[-0.035] text-black/80 dark:text-gray-400">
+                    <span className="font-medium ">{post.category}</span>
+                    <span className="h-0.5 w-5 rounded-full bg-gray-400 "></span>
+                    <span className="text-sm text-black/60">{post.date}</span>
                   </div>
                 </div>
               </article>

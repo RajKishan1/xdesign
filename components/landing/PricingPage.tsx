@@ -199,16 +199,16 @@ const PricingPage = () => {
 
   return (
     <div className={isDark ? "dark" : ""}>
-      <div className="min-h-screen bg-[#f9f9f9] px-4 py-12 dark:bg-black sm:px-6 lg:px-8">
+      <div className=" bg-[#f9f9f9] px-4 pt-12 dark:bg-black sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="flex flex-col items-center">
             <h2 className="bg-white p-1.5 px-3 rounded-full mb-2.5 text-black text-sm">
               Choose a plan
             </h2>
-            <h1 className="text-[40px] font-semibold tracking-[-0.045] text-black my-3">
+            <h1 className="text-[40px] font-semibold tracking-[-0.045] text-black dark:text-white my-3">
               Choose the best plan
             </h1>
-            <p className="text-center mb-13">
+            <p className="text-center mb-13 text-[17px] leading-[1.55em] tracking-[-0.035em]">
               See all the pricing options available, compare
               <br /> features across plans and find the one that perfectly.
             </p>

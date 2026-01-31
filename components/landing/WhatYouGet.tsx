@@ -32,7 +32,7 @@ const WhatYouGet = () => {
           {" "}
           Five things we are offering
         </h1>
-        <p className="text-center">
+        <p className="text-center text-[17px] leading-[1.55em] tracking-[-0.035em]">
           See the important capabilities included that simplify <br />
           tasks and improve outcomes significantly
         </p>
